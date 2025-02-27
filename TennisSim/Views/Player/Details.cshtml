@@ -1,0 +1,330 @@
+﻿@model TennisSim.Models.PlayerDetailsViewModel
+
+<link rel="stylesheet" type="text/css" href="~/css/PlayerDetail.css" />
+
+<div class="container-fluid mt-4">
+    <div class="player-profile">
+        <div class="profile-header">
+            <div class="player-banner">
+                <div class="player-main-info">
+                    <div class="player-photo-container">
+                        <div class="player-photo">
+                            <img src="/images/PlayersPhotos/@(Model.Player.Name + ".webp")" alt="Photo of @Model.Player.Name" class="player-photo-img" />
+                        </div>
+                    </div>
+                    <div class="player-details">
+                        <h1 class="player-name">
+                            <img src="/images/svg/@(Model.Player.Nationality.Code.ToLower()).svg"
+                                 alt="@Model.Player.Nationality.Name"
+                                 class="flag-img">
+                            @Model.Player.Name
+                        </h1>
+                        <div class="player-stats">
+                            <div class="stat-item">
+                                <i class="fas fa-globe"></i>
+                                <span>@Model.Player.Nationality.Name</span>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>Born @Model.Player.YearOfBirth (@(DateTime.Now.Year - Model.Player.YearOfBirth) years)</span>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas @(Model.Player.Active ? "fa-circle-check" : "fa-circle-xmark")"></i>
+                                <span>@(Model.Player.Active ? "Active Player" : "Inactive")</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-section">
+            <div class="row">
+                <!-- Player Attributes Card -->
+                <div class="col-md-6">
+                    <div class="card stats-card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-chart-bar"></i> Player Attributes</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="attributes-grid">
+                                @foreach (var attr in new[] { "Forehand", "Backhand", "Speed", "Stamina", "Mental", "Volley", "Return" })
+                                {
+                                    var playerAttr = Model.Player.Attributes?.FirstOrDefault(pa => pa.AttributeType == attr);
+                                    var value = playerAttr?.Value ?? 0;
+                                    <div class="attribute-item">
+                                        <div class="attribute-header">
+                                            <span class="attribute-label">@attr</span>
+                                            <span class="attribute-value">@value</span>
+                                        </div>
+                                        <div class="progress">
+                                            <div class="progress-bar @GetProgressBarClass(value)"
+                                                 role="progressbar"
+                                                 style="width: @(value)%">
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ranking History Card -->
+                <div class="col-md-6">
+                    <div class="card ranking-card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-trophy"></i> Ranking History</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Rank</th>
+                                            <th>Points</th>
+                                            <th>Change</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var ranking in Model.Player.Rankings?.OrderByDescending(r => r.Date).Take(10) ?? Enumerable.Empty<Ranking>())
+                                        {
+                                            var previousRanking = Model.Player.Rankings
+                                            .Where(r => r.Date < ranking.Date)
+                                            .OrderByDescending(r => r.Date)
+                                            .FirstOrDefault();
+                                            var rankChange = previousRanking != null ? previousRanking.Rank - ranking.Rank : 0;
+
+                                            <tr>
+                                                <td>@ranking.Date.ToString("dd MMM yyyy")</td>
+                                                <td>@ranking.Rank</td>
+                                                <td>@ranking.Points.ToString("N0")</td>
+                                                <td>
+                                                    @if (rankChange > 0)
+                                                    {
+                                                        <span class="text-success"><i class="fas fa-arrow-up"></i> @rankChange</span>
+                                                    }
+                                                    else if (rankChange < 0)
+                                                    {
+                                                        <span class="text-danger"><i class="fas fa-arrow-down"></i> @Math.Abs(rankChange)</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span>─</span>
+                                                    }
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Surface Stats Card -->
+                <div class="col-md-6 mt-4">
+                    <div class="card surface-stats-card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-tennis-ball"></i> Surface Statistics</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Surface</th>
+                                            <th>Wins</th>
+                                            <th>Losses</th>
+                                            <th>Win Rate</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var stat in Model.RecentMatches
+                                        .Where(m => m.Draw?.Tournament != null)
+                                        .GroupBy(m => m.Draw.Tournament.Surface)
+                                        .Select(g => new
+                                        {
+                                           Surface = g.Key,
+                                           Wins = g.Count(m => m.WinnerId == Model.Player.Id),
+                                           Total = g.Count()
+                                        })
+                                        .OrderByDescending(s => s.Wins))
+                                        {
+                                            var winRate = (stat.Total > 0) ? (double)stat.Wins / stat.Total * 100 : 0;
+                                            <tr>
+                                                <td>@stat.Surface</td>
+                                                <td>@stat.Wins</td>
+                                                <td>@(stat.Total - stat.Wins)</td>
+                                                <td>@winRate.ToString("F1")%</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Career Titles Card -->
+                <div class="col-md-6 mt-4">
+                    <div class="card titles-card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-award"></i> Career Titles</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Tournament</th>
+                                            <th>Surface</th>
+                                            <th>Category</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var title in Model.RecentMatches
+                                        .Where(m => m.Round == "Final" &&
+                                        m.WinnerId == Model.Player.Id &&
+                                        m.Draw?.Tournament != null)
+                                        .OrderByDescending(m => m.Date)
+                                        .Select(m => new
+                                        {
+                                           Date = m.Date,
+                                           Tournament = m.Draw.Tournament.Name,
+                                           Surface = m.Draw.Tournament.Surface,
+                                           Category = m.Draw.Tournament.Category
+                                        }))
+                                        {
+                                            <tr>
+                                                <td>@title.Date.ToString("dd MMM yyyy")</td>
+                                                <td>@title.Tournament</td>
+                                                <td>@title.Surface</td>
+                                                <td>@title.Category</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Match History Card -->
+                <div class="col-12 mt-4">
+                    <div class="card match-history-card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h3><i class="fas fa-table-tennis"></i> Match History</h3>
+                            <div class="win-loss-ratio">
+                                <div class="ratio-stats">
+                                    <span class="wins">@Model.TotalWins W</span>
+                                    <span class="separator">/</span>
+                                    <span class="losses">@(Model.TotalMatches - Model.TotalWins) L</span>
+                                    <span class="win-percentage">
+                                        (@(Model.TotalMatches > 0 ? Math.Round(Model.WinPercentage, 1).ToString() : "0")%)
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Tournament</th>
+                                            <th>Surface</th>
+                                            <th>Round</th>
+                                            <th>Opponent</th>
+                                            <th>Opp. Rank</th>
+                                            <th>Score</th>
+                                            <th>Result</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var match in Model.RecentMatches.OrderByDescending(m => m.Date))
+                                        {
+                                            var opponent = match.Player1Id == Model.Player.Id ? match.Player2 : match.Player1;
+                                            var isWinner = match.WinnerId == Model.Player.Id;
+                                            var isPlayer1 = match.Player1Id == Model.Player.Id;
+
+                                            var opponentRank = "-";
+                                            if (opponent?.Rankings != null && opponent.Rankings.Any())
+                                            {
+                                                var rankingAtMatchTime = opponent.Rankings
+                                                .Where(r => r.Date <= match.Date)
+                                                .OrderByDescending(r => r.Date)
+                                                .FirstOrDefault();
+
+                                                if (rankingAtMatchTime != null)
+                                                {
+                                                    opponentRank = rankingAtMatchTime.Rank.ToString();
+                                                }
+                                            }
+
+                                            <tr class="@(isWinner ? "match-won" : "match-lost")">
+                                                <td>@match.Date.ToString("dd MMM yyyy")</td>
+                                                <td>@(match.Draw?.Tournament?.Name ?? "Unknown")</td>
+                                                <td>@(match.Draw?.Tournament?.Surface ?? "Unknown")</td>
+                                                <td>@match.Round</td>
+                                                <td>
+                                                    @if (opponent?.Nationality != null)
+                                                    {
+                                                        <img src="/images/svg/@(opponent.Nationality.Code.ToLower()).svg"
+                                                             alt="@opponent.Nationality.Name"
+                                                             class="flag-img-small">
+                                                    }
+                                                    @(opponent?.Name ?? "Unknown")
+                                                </td>
+                                                <td class="text-center">@opponentRank</td>
+                                                <td>@FormatScore(match.Score ?? "", isWinner, isPlayer1)</td>
+                                                <td class="@(isWinner ? "text-success" : "text-danger")">
+                                                    @(isWinner ? "Won" : "Lost")
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    private string GetProgressBarClass(int value) => value switch
+    {
+        >= 80 => "bg-success",
+        >= 60 => "bg-info",
+        >= 40 => "bg-warning",
+        _ => "bg-danger"
+    };
+
+    private string FormatScore(string score, bool isWinner, bool isPlayer1)
+    {
+        if (string.IsNullOrEmpty(score)) return "-";
+
+        var sets = score.Split(',')
+            .Select(set => set.Split('[')[0].Trim())
+            .ToList();
+
+        if (!sets.Any()) return "-";
+
+        bool shouldInvertScore = (!isWinner && !isPlayer1) || (isWinner && !isPlayer1);
+        return string.Join(" ", sets.Select(set =>
+        {
+            if (!shouldInvertScore) return set;
+
+            var scores = set.Split('-');
+            return scores.Length == 2 && int.TryParse(scores[0], out int first) &&
+                   int.TryParse(scores[1], out int second)
+                ? $"{second}-{first}"
+                : set;
+        }));
+    }
+}

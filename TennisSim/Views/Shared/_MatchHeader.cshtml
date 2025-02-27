@@ -1,0 +1,46 @@
+﻿<div class="match-header card mb-4">
+    <div class="tournament-info p-4">
+        <div class="tournament-name">@Model.Tournament?.Name</div>
+        <div class="text-muted">@Model.Match.Date.ToString("MMMM dd, yyyy")</div>
+        <div class="badge bg-primary mt-2">@Model.Match.Round</div>
+    </div>
+</div>
+<style>
+    .match-header {
+        overflow: hidden;
+    }
+
+    .tournament-info {
+        text-align: center;
+        color: #495057;
+        padding: 2rem;
+        background: linear-gradient(to right, #f9f9f9, #ffffff, #f9f9f9);
+    }
+
+    .tournament-name {
+        color: #1e4c9a;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        display: inline-block;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .bg-primary {
+        background-color: #007bff !important;
+    }
+
+    .tournament-info:hover .tournament-name {
+        color: #0056b3;
+        transition: color 0.3s ease;
+    }
+</style>

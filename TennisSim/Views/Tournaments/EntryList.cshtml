@@ -1,0 +1,80 @@
+﻿@model IEnumerable<TennisSim.Models.EntryList>
+
+<link rel="stylesheet" type="text/css" href="~/css/entrylist.css" />
+<div class="tournament-container">
+    <div class="tournament-header">
+        <h2 class="tournament-title">Entry List - @ViewData["TournamentName"]</h2>
+        <div class="controls-container">
+            <input type="text" 
+                   id="playerSearch" 
+                   class="search-input" 
+                   placeholder="Search players..."/>
+            <select id="sortSelect" class="sort-select">
+                <option value="rank">Sort by Rank</option>
+                <option value="name">Sort by Name</option>
+                <option value="points">Sort by Points</option>
+            </select>
+        </div>
+    </div>
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="alert-warning">
+            <p>@(ViewData["EntryListMessage"] ?? "Entry list will be available closer to the tournament date.")</p>
+        </div>
+    }
+    else
+    {
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Entries</div>
+                <div class="stat-value">@Model.Count()</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Average Ranking</div>
+                <div class="stat-value">@Model.Average(e => e.Rank).ToString("F0")</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Points</div>
+                <div class="stat-value">@Model.Sum(e => e.Points).ToString("N0")</div>
+            </div>
+        </div>
+
+        <table class="entry-table">
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Player</th>
+                    <th>Points</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="entryListBody">
+                @foreach (var entry in Model)
+                {
+                    <tr>
+                        <td>
+                            <div class="rank-badge @(entry.Rank <= 10 ? "top-10" : "regular")">
+                                @entry.Rank
+                            </div>
+                        </td>
+                        <td class="player-name">@entry.PlayerName</td>
+                        <td class="points-cell">@entry.Points.ToString("N0")</td>
+                        <td>
+                            @{
+                                var status = "Main Draw";
+                                var statusClass = "main-draw" ;
+                            }
+                            <span class="status-badge @statusClass">
+                                @status
+                            </span>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+@section Scripts {
+    <script src="~/js/entrylist.js"></script>
+}

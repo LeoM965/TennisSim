@@ -1,0 +1,33 @@
+﻿@{
+    ViewData["Title"] = "Load Game";
+}
+
+
+<link rel="stylesheet" type="text/css" href="~/css/load.css" /> 
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title mb-0">Load Game</h3>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Load" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                        <div class="form-group mb-3">
+                            <label for="username" class="form-label">Enter Your Username</label>
+                            <input type="text" id="username" name="username" class="form-control" placeholder="Username" required />
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Load Game</button>
+                            <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">Back to Home</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

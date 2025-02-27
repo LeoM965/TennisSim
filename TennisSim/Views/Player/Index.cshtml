@@ -1,0 +1,57 @@
+﻿@model List<TennisSim.Models.Player>
+
+<link rel="stylesheet" type="text/css" href="~/css/PlayerRanking.css" />
+
+<h2 class="text-center my-4">🎾 Player Rankings</h2>
+
+<div class="container my-5">
+    <div class="table-container">
+        <table class="table table-striped table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Ranking</th>
+                    <th>Name</th>
+                    <th>Year of Birth</th>
+                    <th>Nationality</th>
+                    <th>Points</th>
+                    <th>Active</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var player in Model)
+                {
+                    <tr>
+                        <td>
+                            <span class="rank-badge">@player.Ranking</span>
+                        </td>
+                        <td><strong>@player.Name</strong></td>
+                        <td>@player.YearOfBirth</td>
+                        <td>
+                            <div class="country-combined">
+                                <img src="/images/svg/@(player.Nationality.Code.ToLower() + ".svg")"
+                                     alt="@player.Nationality.Name"
+                                     title="@player.Nationality.Name"
+                                     class="flag-img">
+                                <span>@player.Nationality.Name</span>
+                            </div>
+                        </td>
+                        <td><span>@player.LatestPoints</span></td>
+                        <td>
+                            <span class="badge @(player.Active ? "bg-success" : "bg-secondary")">
+                                <i class="bi @(player.Active ? "bi-check-circle" : "bi-x-circle")"></i>
+                                @(player.Active ? "Active" : "Inactive")
+                            </span>
+                        </td>
+                        <td>
+                            <a href="@Url.Action("Details", "Player", new { id = player.Id })"
+                               class="btn btn-primary btn-sm">
+                                <i class="bi bi-info-circle"></i> View
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

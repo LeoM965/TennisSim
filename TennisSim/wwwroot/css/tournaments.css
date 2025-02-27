@@ -1,0 +1,281 @@
+﻿/* Root Variables */
+:root {
+    --wta-primary: #0033A0;
+    --wta-accent: #FF69B4;
+    --wta-gray: #F5F5F5;
+    --wta-text: #333333;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #FFFFFF;
+    color: var(--wta-text);
+}
+
+.header {
+    background-color: var(--wta-primary);
+    padding: 20px;
+    color: white;
+    text-align: center;
+}
+
+    .header h1 {
+        margin: 0;
+        font-size: 32px;
+        font-weight: 700;
+    }
+
+.filters-container {
+    background: #f8f9fa;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ddd;
+}
+
+.filters-grid {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+    .filter-group label {
+        font-weight: 600;
+        color: var(--wta-primary);
+    }
+
+    .filter-group select,
+    .filter-group input[type="date"] {
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background-color: white;
+    }
+
+.filter-buttons {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+}
+
+    .filter-buttons button {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+.apply-filters {
+    background-color: var(--wta-primary);
+    color: white;
+}
+
+    .apply-filters:hover {
+        background-color: #002880;
+    }
+
+.reset-filters {
+    background-color: #dc3545;
+    color: white;
+}
+
+    .reset-filters:hover {
+        background-color: #bb2d3b;
+    }
+
+/* Tournament Container and Cards */
+.tournament-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.month-header {
+    padding: 15px 0;
+    margin: 30px 0 20px;
+    border-bottom: 3px solid var(--wta-primary);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+    .month-header i {
+        font-size: 28px;
+        color: var(--wta-primary);
+    }
+
+    .month-header h2 {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--wta-primary);
+    }
+
+.tournament-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+    margin-bottom: 40px;
+}
+
+.tournament-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    border: 1px solid #E0E0E0;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+}
+
+    .tournament-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    }
+
+.tournament-image {
+    position: relative;
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+    background: linear-gradient(135deg, var(--wta-primary), var(--wta-accent));
+}
+
+    .tournament-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.9;
+    }
+
+    .tournament-image::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.3) 100%);
+        z-index: 1;
+    }
+
+.tournament-category-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 1.1em;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    z-index: 2;
+}
+
+.tournament-dates {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 1em;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    z-index: 2;
+}
+
+.tournament-info {
+    padding: 20px;
+}
+
+.tournament-name {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--wta-primary);
+    margin-bottom: 12px;
+    line-height: 1.3;
+}
+
+.tournament-location,
+.tournament-surface,
+.tournament-qualifying {
+    font-size: 14px;
+    color: #666;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+    .tournament-location i,
+    .tournament-surface i,
+    .tournament-qualifying i {
+        color: var(--wta-primary);
+        font-size: 16px;
+    }
+
+.tournament-qualifying {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #eee;
+}
+
+.no-results {
+    text-align: center;
+    padding: 40px;
+    font-size: 18px;
+    color: #666;
+}
+
+/* Responsive Styles */
+@media (max-width: 1200px) {
+    .tournament-container {
+        padding: 15px;
+    }
+}
+
+@media (max-width: 992px) {
+    .tournament-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .tournament-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .month-header {
+        margin: 20px 0 15px;
+    }
+
+        .month-header h2 {
+            font-size: 24px;
+        }
+
+    .tournament-name {
+        font-size: 18px;
+    }
+
+    .filters-grid {
+        grid-template-columns: 1fr;
+    }
+}

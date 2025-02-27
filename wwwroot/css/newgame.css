@@ -1,0 +1,104 @@
+﻿body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #007bff 25%, #28a745 75%);
+    color: #fff;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 20px;
+    background-size: cover;
+    background-position: center;
+    transition: all 0.3s ease-in-out;
+}
+
+.card-custom {
+    background-color: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 30px;
+    text-align: center;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    animation: fadeIn 1s ease-in-out;
+    width: 80%;
+}
+
+    .card-custom h2 {
+        font-family: 'Roboto', sans-serif;
+        font-size: 36px;
+        font-weight: 700;
+        color: #ffc107;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
+        margin-bottom: 20px;
+    }
+
+    .card-custom p {
+        font-size: 20px;
+        font-weight: 300;
+        text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+    }
+
+.tennis-icon {
+    font-size: 60px;
+    color: #ffc107;
+    margin-bottom: 20px;
+}
+
+.input-custom {
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    transition: border 0.2s ease-in-out;
+}
+
+    .input-custom:focus {
+        border-color: #ffc107;
+    }
+
+.btn-custom {
+    background-color: #ffc107;
+    color: #333;
+    font-size: 18px;
+    padding: 15px 30px;
+    border-radius: 50px;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease-in-out;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-transform: uppercase;
+}
+
+    .btn-custom i {
+        margin-right: 10px;
+    }
+
+    .btn-custom:hover {
+        background-color: #e0a800;
+        transform: translateY(-5px);
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+    }
+
+    .btn-custom:active {
+        transform: translateY(2px);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+
+.footer-message {
+    font-size: 16px;
+    font-weight: 300;
+    margin-top: 15px;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}

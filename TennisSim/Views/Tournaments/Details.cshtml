@@ -1,0 +1,206 @@
+﻿@using TennisSim.Models
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@Model.Name - Tournament Details</title>
+    <link rel="stylesheet" type="text/css" href="~/css/TournamentDetailss.css" />
+    <style>
+        .table-custom {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-family: Arial, sans-serif;
+        }
+
+            .table-custom th, .table-custom td {
+                padding: 12px 15px;
+                text-align: left;
+                border: 1px solid #ddd;
+            }
+
+            .table-custom th {
+                background-color: #343a40;
+                color: white;
+                font-size: 16px;
+            }
+
+            .table-custom tr:nth-child(even) {
+                background-color: #f2f2f2;
+            }
+
+            .table-custom tr:hover {
+                background-color: #ddd;
+            }
+
+            .table-custom td {
+                font-size: 14px;
+                color: #555;
+            }
+
+        .entry-list-table th, .entry-list-table td {
+            text-align: left;
+            padding: 8px 12px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .entry-list-table th {
+            background-color: #343a40;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>@Model.StartDate.ToString("MMMM dd") - @Model.EndDate.ToString("MMMM dd"), @Model.StartDate.Year</div>
+                <div>@Model.Location</div>
+            </div>
+        </div>
+    </div>
+
+    <nav class="tournament-nav sticky-top">
+        <div class="container">
+            <ul class="nav">
+                <li class="nav-item">
+                    <a class="nav-link active" href="#">Overview</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="@Url.Action("GenerateDraw", "Draw", new { tournamentId = Model.Id })">View Draw</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="@Url.Action("Schedule", "Tournaments", new { id = Model.Id })">Schedule</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="@Url.Action("EntryList", "Tournaments", new { id = Model.Id })">Players</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="@Url.Action("Index", "Results", new { id = Model.Id })">Results</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="tournament-header">
+        <div class="container">
+            <span class="tournament-category-badge">@Model.Category</span>
+            <h1 class="tournament-title">@Model.Name</h1>
+            <div class="tournament-meta">
+                <i class="fas fa-map-marker-alt me-2"></i>@Model.Location
+            </div>
+        </div>
+    </div>
+
+    <div class="container tournament-content">
+        <div class="key-info-box">
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">SURFACE</div>
+                    <div class="info-value">@Model.Surface</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">TOURNAMENT DATES</div>
+                    <div class="info-value">@Model.StartDate.ToString("MMM dd") - @Model.EndDate.ToString("MMM dd")</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">CATEGORY</div>
+                    <div class="info-value">@Model.Category</div>
+                </div>
+                @if (Model.QualifyingStartDate != default(DateTime))
+                {
+                    <div class="info-item">
+                        <div class="info-label">QUALIFYING DATES</div>
+                        <div class="info-value">@Model.QualifyingStartDate.ToString("MMM dd") - @Model.QualifyingEndDate.ToString("MMM dd")</div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="content-section">
+                    <h3 class="section-title">Tournament Schedule</h3>
+                    <div class="schedule-item">
+                        <div class="schedule-date">@Model.StartDate.ToString("dddd, MMMM dd")</div>
+                        <div class="schedule-event">Main Draw Begins</div>
+                    </div>
+                    @if (Model.QualifyingStartDate != default(DateTime))
+                    {
+                        <div class="schedule-item">
+                            <div class="schedule-date">@Model.QualifyingStartDate.ToString("dddd, MMMM dd")</div>
+                            <div class="schedule-event">Qualifying Begins</div>
+                        </div>
+                    }
+                    <div class="schedule-item">
+                        <div class="schedule-date">@Model.EndDate.ToString("dddd, MMMM dd")</div>
+                        <div class="schedule-event">Finals</div>
+                    </div>
+                </div>
+
+                <div class="content-section">
+                    <h3 class="section-title">Point Distribution</h3>
+                    @if (Model.PointDistributions != null && Model.PointDistributions.Count > 0)
+                    {
+                        <table class="table-custom">
+                            <thead>
+                                <tr>
+                                    <th>Round</th>
+                                    <th>Points</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var distribution in Model.PointDistributions)
+                                {
+                                    <tr>
+                                        <td>@distribution.Round</td>
+                                        <td>@distribution.Points</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <p>No point distribution information available for this tournament.</p>
+                    }
+                </div>
+
+                <div class="content-section">
+                    <h3 class="section-title">Entry List</h3>
+                    @if (ViewData["EntryListLink"] != null)
+                    {
+                        <p><a href="@ViewData["EntryListLink"]" class="btn btn-primary">View Entry List</a></p>
+                    }
+                </div>
+
+                <div class="content-section">
+                    <h3 class="section-title">Tournament Information</h3>
+                    <p>Experience world-class tennis at @Model.Name, featuring top international players competing on @Model.Surface courts. This @Model.Category tournament is a highlight of the tennis calendar, showcasing exceptional talent and thrilling matches.</p>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="sidebar-widget">
+                    <h3 class="section-title">Venue Information</h3>
+                    <p><strong>Location:</strong><br>@Model.Location</p>
+                    <p><strong>Surface:</strong><br>@Model.Surface</p>
+                </div>
+
+                <div class="sidebar-widget">
+                    <h3 class="section-title">Quick Links</h3>
+                    <div class="list-group list-group-flush">
+                        <a href="#" class="list-group-item list-group-item-action">Tournament Schedule</a>
+                        <a href="#" class="list-group-item list-group-item-action">Order of Play</a>
+                        <a href="#" class="list-group-item list-group-item-action">Draw Sheets</a>
+                        <a href="#" class="list-group-item list-group-item-action">Tournament Rules</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

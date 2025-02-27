@@ -1,0 +1,265 @@
+﻿:root {
+    --primary-color: #D6001C;
+    --secondary-color: #12284B;
+    --background-gradient: linear-gradient(135deg, #F5F5F5, white);
+    --box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+    --border-radius: 15px;
+    --font-family: 'Inter', 'Roboto', 'Arial', sans-serif;
+    --light-border: 1px solid #ddd;
+    --light-gray: #f8f9fa;
+    --medium-gray: #e9ecef;
+    --text-muted: #666;
+}
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+body {
+    font-family: var(--font-family);
+    background: var(--background-gradient);
+    color: #333;
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.page-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 15px;
+}
+
+.tournament-header {
+    background: linear-gradient(to right, var(--secondary-color), var(--primary-color));
+    color: white;
+    text-align: center;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+}
+
+    .tournament-header h1 {
+        font-size: 2.5rem;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        font-weight: 700;
+    }
+
+.player-comparison {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 30px;
+    margin-bottom: 40px;
+}
+
+.player-card {
+    flex: 1 1 calc(50% - 30px);
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 20px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+    .player-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 12px 20px rgba(0, 0, 0, 0.15);
+    }
+
+.player-photo-container {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin: 0 auto 15px;
+    border: 4px solid var(--primary-color);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease;
+}
+
+.player-photo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
+.player-name {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--secondary-color);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+    .player-name .flag-img {
+        width: 25px;
+        height: auto;
+        margin-right: 10px;
+    }
+
+    .player-name a {
+        color: inherit;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+        .player-name a:hover {
+            color: var(--primary-color);
+            text-decoration: underline;
+        }
+
+.wins-count {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.match-section {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+.match-section-title {
+    font-size: 1.8rem;
+    color: var(--secondary-color);
+    border-bottom: 3px solid var(--primary-color);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.match-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+    .match-table th,
+    .match-table td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #E0E0E0;
+    }
+
+    .match-table th {
+        background-color: var(--secondary-color);
+        color: white;
+        font-size: 1rem;
+        text-transform: uppercase;
+    }
+
+    .match-table tr:nth-child(even) {
+        background-color: #F9F9F9;
+    }
+
+    .match-table tr:hover {
+        background-color: #F1F1F1;
+    }
+
+.game-box {
+    border: var(--light-border);
+    margin-bottom: 15px;
+    border-radius: 4px;
+    background: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+.set-header {
+    padding: 15px;
+    background-color: var(--light-gray);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: var(--light-border);
+}
+
+    .set-header:hover {
+        background-color: var(--medium-gray);
+    }
+
+.toggle-icon {
+    width: 20px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    font-family: monospace;
+    margin-left: 10px;
+    transition: transform 0.3s ease;
+}
+
+.set-details {
+    display: none;
+    padding: 15px;
+}
+
+    .set-details.active {
+        display: block;
+    }
+.point-sequence .point {
+    display: inline-block;
+    margin-right: 8px;
+    margin-bottom: 5px;
+    padding: 3px 8px;
+    background-color: var(--medium-gray);
+    border-radius: 3px;
+    font-family: monospace;
+}
+
+.game-summary,
+.score-summary {
+    margin: 10px 0;
+    color: var(--text-muted);
+    font-style: italic;
+    font-size: 0.9em;
+}
+
+@media (max-width: 768px) {
+    .player-comparison {
+        flex-direction: column;
+    }
+
+    .match-table {
+        font-size: 0.9rem;
+    }
+
+    .flag-img {
+        width: 20px;
+    }
+
+    .player-name {
+        font-size: 1.3rem;
+    }
+
+    .wins-count {
+        font-size: 2rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .tournament-header h1 {
+        font-size: 2rem;
+    }
+
+    .player-name {
+        font-size: 1.2rem;
+    }
+
+    .wins-count {
+        font-size: 1.8rem;
+    }
+}

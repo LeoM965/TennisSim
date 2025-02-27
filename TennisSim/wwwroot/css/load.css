@@ -1,0 +1,148 @@
+﻿:root {
+    --tennis-blue: #0033A0;
+    --tennis-light-blue: #007DC3;
+    --tennis-yellow: #ffc107;
+    --tennis-gray: #F4F4F4;
+    --tennis-text-gray: #6c757d;
+    --tennis-gradient: linear-gradient(135deg, var(--tennis-blue) 0%, var(--tennis-light-blue) 100%);
+}
+
+body {
+    background: var(--tennis-gradient);
+    background-size: 400% 400%;
+    animation: gradientAnimation 15s ease infinite;
+    font-family: 'Arial', sans-serif;
+    color: var(--tennis-text-gray);
+}
+
+@keyframes gradientAnimation {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.container {
+    padding: 2rem 1rem;
+}
+
+.card {
+    border: none;
+    border-radius: 16px;
+    background: white;
+    padding: 2rem;
+    box-shadow: 0 10px 25px rgba(0, 51, 160, 0.15);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    margin-bottom: 2rem;
+}
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 51, 160, 0.2);
+    }
+
+.card-header {
+    background-color: var(--tennis-blue);
+    color: white;
+    border-radius: 16px 16px 0 0;
+    padding: 1rem;
+    text-align: center;
+}
+
+.card-title {
+    margin-bottom: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    font-weight: 600;
+    color: var(--tennis-text-gray);
+}
+
+.form-control {
+    border: 1px solid var(--tennis-gray);
+    border-radius: 8px;
+    padding: 0.75rem;
+    font-size: 1rem;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+    .form-control:focus {
+        border-color: var(--tennis-light-blue);
+        box-shadow: 0 0 0 3px rgba(0, 125, 195, 0.25);
+    }
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    border-radius: 30px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background-color: var(--tennis-blue);
+    color: white;
+}
+
+    .btn-primary:hover {
+        background-color: var(--tennis-light-blue);
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 51, 160, 0.2);
+    }
+
+.btn-outline-secondary {
+    background-color: transparent;
+    border: 2px solid var(--tennis-text-gray);
+    color: var(--tennis-text-gray);
+}
+
+    .btn-outline-secondary:hover {
+        background-color: var(--tennis-text-gray);
+        color: white;
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(108, 117, 125, 0.2);
+    }
+
+.d-grid {
+    display: grid;
+    gap: 1rem;
+}
+
+.text-danger {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+@media (max-width: 768px) {
+    .card {
+        padding: 1rem;
+    }
+
+    .btn {
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+}

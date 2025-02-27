@@ -1,0 +1,36 @@
+﻿@model IEnumerable<TennisSim.Models.Draw>
+
+<div class="container">
+    <h2>Tournament Draws</h2>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Tournament</th>
+                <th>Start Date</th>
+                <th>Category</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var draw in Model)
+            {
+                <tr>
+                    <td>@draw.Tournament.Name</td>
+                    <td>@draw.Tournament.StartDate.ToShortDateString()</td>
+                    <td>@draw.Tournament.Category</td>
+                    <td>
+                        <a asp-action="GenerateDraw" asp-route-tournamentId="@draw.TournamentId" class="btn btn-primary btn-sm">View Draw</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            No draws available yet.
+        </div>
+    }
+</div>

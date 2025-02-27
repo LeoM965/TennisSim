@@ -1,0 +1,306 @@
+﻿:root {
+    --primary: #E4135B;
+    --primary-dark: #B30F48;
+    --primary-light: #ff4081;
+    --text: #2d3748;
+    --text-light: #718096;
+    --bg: #f7fafc;
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --transition: all 0.3s ease;
+}
+
+.tournament-schedule {
+    background: var(--bg);
+    min-height: 100vh;
+    font-family: system-ui, -apple-system, sans-serif;
+    color: var(--text);
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+header {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    padding: 3rem max(2rem, calc((100% - 1200px)/2));
+    text-align: center;
+    box-shadow: var(--shadow);
+}
+
+.date-selector select {
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    border: 1px solid #e2e8f0;
+    margin: 1rem 0;
+}
+
+h1 {
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    margin: 0;
+}
+
+.schedule-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem max(1rem, 5%);
+}
+
+.notice {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    background: white;
+    padding: 3rem;
+    border-radius: 1rem;
+    box-shadow: var(--shadow);
+    fill: var(--text-light);
+}
+
+.days-nav {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+}
+
+.day-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+    background: white;
+    border: none;
+    border-radius: 1rem;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: var(--shadow);
+    position: relative;
+}
+
+    .day-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 8px -2px rgba(0, 0, 0, 0.1);
+    }
+
+    .day-btn.active {
+        background: var(--primary);
+        color: white;
+        transform: translateY(-2px);
+    }
+
+.day-schedule {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+    .day-schedule.active {
+        display: block;
+    }
+
+.matches {
+    display: grid;
+    gap: 1rem;
+}
+
+.match {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 2rem;
+    background: white;
+    padding: 1.5rem;
+    border-radius: 1rem;
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+}
+
+    .match:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 8px -2px rgba(0, 0, 0, 0.1);
+    }
+
+    .match[data-status="inprogress"] {
+        border-left: 4px solid #48bb78;
+    }
+
+    .match[data-status="completed"] {
+        border-left: 4px solid #a0aec0;
+    }
+
+    .match[data-status="postponed"] {
+        border-left: 4px solid #ecc94b;
+    }
+
+    .match[data-status="cancelled"] {
+        border-left: 4px solid #f56565;
+    }
+
+    .match[data-status="walkover"] {
+        border-left: 4px solid #805ad5;
+    }
+
+.player-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+}
+
+.seed {
+    color: var(--primary);
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.inline-odds {
+    margin-left: auto;
+    background-color: #f8f9fa;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.9rem;
+}
+
+.odds-value {
+    color: #2c5282;
+    font-weight: 600;
+}
+
+.decimal-odds {
+    color: #718096;
+    font-size: 0.8rem;
+}
+
+.simulate-button {
+    margin-top: 1rem;
+    text-align: center;
+}
+
+    .simulate-button a {
+        padding: 0.75rem 1.5rem;
+        background-color: #4CAF50;
+        color: white;
+        font-size: 1rem;
+        font-weight: 600;
+        border-radius: 50px;
+        text-decoration: none;
+        display: inline-block;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+        .simulate-button a:hover {
+            background-color: #45a049;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .simulate-button a:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(72, 126, 255, 0.8);
+        }
+
+.day-status {
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+    .day-status.warning {
+        background-color: #fff3cd;
+        border: 1px solid #ffeeba;
+        color: #856404;
+    }
+
+    .day-status.success {
+        background-color: #d4edda;
+        border: 1px solid #c3e6cb;
+        color: #155724;
+    }
+
+.status-icon {
+    font-size: 1.5rem;
+}
+
+.status-message {
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.pending-indicator {
+    position: absolute;
+    top: 0.25rem;
+    right: 0.25rem;
+    color: #dc3545;
+    font-size: 0.75rem;
+}
+
+.needs-simulation {
+    border: 2px solid #ffc107;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.simulate-button a.pulse {
+    animation: pulse 2s infinite;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .match {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+        padding: 1.25rem;
+    }
+
+    .match-time {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-align: left;
+    }
+
+        .match-time small {
+            margin: 0;
+        }
+
+    .player {
+        padding: 0.375rem;
+    }
+}
+
+.winner {
+    color: green;
+    font-weight: bold;
+}
+
+.loser {
+    color: red;
+}

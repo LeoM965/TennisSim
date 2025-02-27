@@ -1,0 +1,97 @@
+﻿@{
+    ViewData["Title"] = "TennisSim";
+}
+<link href="~/css/home.css" rel="stylesheet" />
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card card-custom">
+                <div class="tennis-icons">
+                    <i class="fas fa-baseball icon"></i>
+                    <i class="fas fa-table-tennis-paddle-ball icon"></i>
+                    <i class="fas fa-trophy icon"></i>
+                </div>
+                <h1 class="display-4">Welcome to <span class="text-warning">TennisSim</span>!</h1>
+                <p class="welcome-message">Your ultimate tennis management and simulation experience starts here!</p>
+                <div class="features-list mt-4 mb-4">
+                    <div class="row text-start">
+                        <div class="col-md-6">
+                            <p><i class="fas fa-check-circle text-warning me-2"></i> Career Mode Management</p>
+                            <p><i class="fas fa-check-circle text-warning me-2"></i> Player Development System</p>
+                            <p><i class="fas fa-check-circle text-warning me-2"></i> Realistic Match Simulation</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><i class="fas fa-check-circle text-warning me-2"></i> Training Programs</p>
+                            <p><i class="fas fa-check-circle text-warning me-2"></i> Tournament Strategy</p>
+                            <p><i class="fas fa-check-circle text-warning me-2"></i> Dynamic Rankings</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-center">
+                    <a href="/GameStart/EnterUsername" class="btn btn-large btn-new-game me-3">
+                        <i class="fas fa-plus-circle me-2"></i> Start Your Journey
+                    </a>
+                    <a href="/Game/Load" class="btn btn-large btn-load-game">
+                        <i class="fas fa-folder-open me-2"></i> Continue Your Journey
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="stats-section">
+        <div class="stats-card">
+            <h3>Players</h3>
+            <p>400+ professional players available</p>
+            <div class="features-mini">
+                <small><i class="fas fa-star text-warning me-1"></i> Individual Skills</small><br>
+                <small><i class="fas fa-star text-warning me-1"></i> Playing Styles</small><br>
+                <small><i class="fas fa-star text-warning me-1"></i> Career Stats</small>
+            </div>
+        </div>
+        <div class="stats-card">
+            <h3>Tournaments</h3>
+            <p>200+ realistic tournaments to participate</p>
+            <div class="features-mini">
+                <small><i class="fas fa-star text-warning me-1"></i> Grand Slams</small><br>
+                <small><i class="fas fa-star text-warning me-1"></i> Masters1000</small><br>
+                <small><i class="fas fa-star text-warning me-1"></i> Masters500/250/125</small>
+                <small><i class="fas fa-star text-warning me-1"></i> ITFs</small>
+            </div>
+        </div>
+        <div class="stats-card">
+            <h3>Game Modes</h3>
+            <p>Multiple ways to play</p>
+            <div class="features-mini">
+                <small><i class="fas fa-star text-warning me-1"></i> Career Mode</small><br>
+                <small><i class="fas fa-star text-warning me-1"></i> Tournament Mode</small><br>
+                <small><i class="fas fa-star text-warning me-1"></i> Quick Match</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-8 offset-md-2">
+            <div class="card card-custom">
+                <h3 class="text-warning mb-3">Player Development</h3>
+                <div class="development-features">
+                    <div class="row text-start">
+                        <div class="col-md-6">
+                            <p><i class="fas fa-dumbbell text-warning me-2"></i> Physical Training</p>
+                            <p><i class="fas fa-brain text-warning me-2"></i> Mental Conditioning</p>
+                            <p><i class="fas fa-running text-warning me-2"></i> Agility Development</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><i class="fas fa-bullseye text-warning me-2"></i> Technique Mastery</p>
+                            <p><i class="fas fa-chart-line text-warning me-2"></i> Performance Analysis</p>
+                            <p><i class="fas fa-heartbeat text-warning me-2"></i> Injury Management</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="text-center footer-custom">
+        <p>&copy; 2024 TennisSim. All rights reserved.</p>
+    </footer>
+</div>

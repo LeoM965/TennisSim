@@ -1,0 +1,246 @@
+﻿:root {
+    --primary-color: #2c3e50;
+    --secondary-color: #3498db;
+    --background-color: #f5f6fa;
+    --card-background: #ffffff;
+    --border-radius-lg: 15px;
+    --border-radius-sm: 4px;
+    --box-shadow-default: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --box-shadow-hover: 0 8px 12px rgba(0, 0, 0, 0.2);
+    --transition-default: 0.3s ease-in-out;
+}
+
+body {
+    background-color: var(--background-color);
+    font-family: 'Poppins', sans-serif;
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+
+/* Player Profile Section */
+.player-profile {
+    max-width: 1400px;
+    width: 90%;
+    margin: 2rem auto;
+    padding: 2rem;
+    border-radius: var(--border-radius-lg);
+    background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%);
+    box-shadow: var(--box-shadow-default);
+    transition: transform var(--transition-default), box-shadow var(--transition-default);
+}
+
+.player-banner {
+    border-radius: var(--border-radius-lg);
+    padding: 2rem;
+    color: white;
+}
+
+.player-main-info {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+/* Player Photo */
+.player-photo {
+    width: 240px;
+    height: 240px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin: 0 auto;
+    box-shadow: var(--box-shadow-default);
+    transition: transform var(--transition-default);
+}
+
+    .player-photo:hover {
+        transform: scale(1.05);
+    }
+
+.player-photo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Player Stats */
+.player-stats {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.1rem;
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius-sm);
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.flag-img, .flag-img-small {
+    border-radius: var(--border-radius-sm);
+    box-shadow: var(--box-shadow-default);
+}
+
+.flag-img {
+    width: 40px;
+    height: 30px;
+    margin-left: 0.5rem;
+}
+
+.flag-img-small {
+    width: 24px;
+    height: 18px;
+}
+
+/* Cards */
+.card {
+    border: none;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--box-shadow-default);
+    margin-bottom: 2rem;
+    overflow: hidden;
+    transition: transform var(--transition-default);
+}
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--box-shadow-hover);
+    }
+
+.card-header {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 1rem 1.5rem;
+    border: none;
+}
+
+    .card-header h3 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+
+/* Attributes Section */
+.attributes-grid {
+    display: grid;
+    gap: 1.5rem;
+    padding: 1rem;
+}
+
+.attribute-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.attribute-label {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.attribute-value {
+    font-weight: 600;
+    color: var(--secondary-color);
+}
+
+/* Progress Bars */
+.progress {
+    height: 12px;
+    background-color: #e9ecef;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    transition: width var(--transition-default);
+}
+
+.progress-bar-excellent {
+    background-color: #2ecc71;
+}
+
+.progress-bar-good {
+    background-color: #3498db;
+}
+
+.progress-bar-average {
+    background-color: #f1c40f;
+}
+
+.progress-bar-poor {
+    background-color: #e74c3c;
+}
+
+/* Tables */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+    .table th {
+        background-color: #f8f9fa;
+        color: var(--primary-color);
+        font-weight: 600;
+        padding: 0.75rem;
+        text-align: left;
+        border-bottom: 2px solid #dee2e6;
+    }
+
+    .table td {
+        padding: 0.75rem;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .table tr:hover td {
+        background: rgba(240, 240, 240, 0.5);
+    }
+
+/* Match Results */
+.match-won {
+    background-color: rgba(46, 204, 113, 0.1);
+}
+
+.match-lost {
+    background-color: rgba(231, 76, 60, 0.1);
+}
+
+.match-result {
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--border-radius-sm);
+    font-weight: 500;
+}
+
+    .match-result.won {
+        background-color: rgba(46, 204, 113, 0.2);
+        color: #27ae60;
+    }
+
+    .match-result.lost {
+        background-color: rgba(231, 76, 60, 0.2);
+        color: #c0392b;
+    }
+
+@media (max-width: 768px) {
+    .player-main-info {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .player-stats {
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .player-photo {
+        width: 180px;
+        height: 180px;
+    }
+}

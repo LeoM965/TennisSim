@@ -1,0 +1,225 @@
+﻿.tournament-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+}
+
+.tournament-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.tournament-title {
+    font-size: 2.2rem;
+    color: #2c3e50;
+    font-weight: 600;
+    position: relative;
+}
+
+    .tournament-title::after {
+        content: '';
+        position: absolute;
+        bottom: -8px;
+        left: 0;
+        width: 60px;
+        height: 4px;
+        background: linear-gradient(90deg, #3498db, #2980b9);
+        border-radius: 2px;
+    }
+
+.controls-container {
+    display: flex;
+    gap: 1rem;
+}
+
+.search-input, .sort-select {
+    padding: 0.75rem 1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+    .search-input:focus, .sort-select:focus {
+        outline: none;
+        border-color: #3498db;
+        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+    }
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease;
+}
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+    }
+
+.stat-label {
+    color: #64748b;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.stat-value {
+    color: #1e293b;
+    font-size: 1.8rem;
+    font-weight: 600;
+}
+
+.entry-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+    .entry-table thead {
+        background: #f8fafc;
+    }
+
+    .entry-table th {
+        padding: 1rem 1.5rem;
+        text-align: left;
+        font-weight: 600;
+        color: #64748b;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 2px solid #e5e7eb;
+    }
+
+    .entry-table td {
+        padding: 1rem 1.5rem;
+        color: #334155;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .entry-table tbody tr:hover {
+        background: #f8fafc;
+    }
+
+.rank-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    font-weight: 600;
+}
+
+    .rank-badge.top-10 {
+        background: linear-gradient(135deg, #3498db, #2980b9);
+        color: white;
+    }
+
+    .rank-badge.regular {
+        background: #f1f5f9;
+        color: #64748b;
+    }
+
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+    .status-badge.main-draw {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .status-badge.qualifying {
+        background: #fef9c3;
+        color: #854d0e;
+    }
+
+.alert-warning {
+    background: #fff7ed;
+    border-left: 4px solid #f97316;
+    color: #c2410c;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+}
+
+.player-name {
+    font-weight: 500;
+}
+
+.points-cell {
+    font-family: 'Monaco', monospace;
+}
+
+@media (max-width: 768px) {
+    .tournament-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+    }
+
+    .controls-container {
+        flex-direction: column;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .entry-table {
+        display: block;
+        overflow-x: auto;
+    }
+}
+.entry-table tbody tr {
+    opacity: 0;
+    transform: translateY(10px);
+    animation: fadeInUp 
+        ease forwards;
+    animation-play-state: paused;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.wta-btn.viewed {
+    background-color: #28a745;
+    color: white;
+}
+
+.progress {
+    height: 10px;
+    border-radius: 5px;
+    background-color: #e9ecef;
+}
+
+.progress-bar {
+    background-color: #007bff;
+    transition: width 0.3s ease;
+}

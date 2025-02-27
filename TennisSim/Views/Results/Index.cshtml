@@ -1,0 +1,221 @@
+﻿@model Tournament
+
+@if (Model == null)
+{
+    <div class="alert alert-danger">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        Tournament data is not available.
+    </div>
+    return;
+}
+
+<link href="~/css/Results.css" rel="stylesheet" />
+
+<div class="tournament-container">
+    <div class="tournament-header">
+        <div class="tournament-title">
+            <h1>@Model.Name</h1>
+            <div class="tournament-badges">
+                <span class="badge badge-category">@Model.Category</span>
+                <span class="badge badge-surface">@Model.Surface</span>
+            </div>
+        </div>
+        <div class="tournament-meta">
+            <span class="location"><i class="fas fa-map-marker-alt"></i> @Model.Location</span>
+            <span class="dates"><i class="far fa-calendar-alt"></i> @Model.StartDate.ToString("dd MMM") - @Model.EndDate.ToString("dd MMM yyyy")</span>
+            @if (Model.QualifyingStartDate.HasValue)
+            {
+                <span class="qualifying-dates">
+                    @if (Model.QualifyingStartDate.HasValue && Model.QualifyingEndDate.HasValue)
+                    {
+                        <span class="qualifying-dates">
+                            <i class="fas fa-calendar-check"></i> Qualifying: @Model.QualifyingStartDate.Value.ToString("dd MMM") - @Model.QualifyingEndDate.Value.ToString("dd MMM")
+                        </span>
+                    }
+                </span>
+            }
+        </div>
+    </div>
+
+    <div class="tournament-body">
+        @{
+            var firstDraw = Model.Draws?.FirstOrDefault();
+            var hasMatches = firstDraw?.DrawMatches != null &&
+            firstDraw.DrawMatches.Any(dm => dm.Match != null);
+        }
+
+        @if (hasMatches && firstDraw != null)
+        {
+            var currentDraw = firstDraw;
+
+            var matchesByDate = currentDraw.DrawMatches
+            .Where(dm => dm.Match != null && !dm.IsBye)
+            .GroupBy(dm => dm.Match!.Date.Date)
+            .OrderBy(g => g.Key);
+
+            <div class="draw-info">
+                <div class="draw-stats">
+                    <div class="stat-box primary">
+                        <span class="stat-label">Draw Size</span>
+                        <span class="stat-value">@currentDraw.DrawSize</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-label">Seeds</span>
+                        <span class="stat-value">@currentDraw.SeedCount</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-label">Byes</span>
+                        <span class="stat-value">@currentDraw.ByeCount</span>
+                    </div>
+                </div>
+            </div>
+
+            @if (!matchesByDate.Any())
+            {
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Matches were found, but no matches with dates were available.
+                </div>
+            }
+
+            <div class="day-matches-container">
+                @foreach (var dateGroup in matchesByDate)
+                {
+                    <div class="day-section">
+                        <h2 class="day-title">
+                            @dateGroup.Key.ToString("dddd, dd MMMM yyyy")
+                        </h2>
+                        <div class="matches-container">
+                            @foreach (var drawMatch in dateGroup.OrderBy(dm => dm.Match!.Date.TimeOfDay))
+                            {
+                                var match = drawMatch.Match;
+                                if (match != null)
+                                {
+                                    <div class="match-card @(match.Status == MatchStatus.InProgress ? "match-live" : "")" data-match-id="@match.Id">
+                                        <div class="match-datetime">
+                                            <span class="match-time">@match.Date.ToString("HH:mm")</span>
+                                        </div>
+
+                                        @if (match.Status == MatchStatus.Completed && !string.IsNullOrEmpty(match.Score))
+                                        {
+                                            <div class="match-completed">
+                                                <div class="player @(match.WinnerId == drawMatch.Player1Id ? "winner" : "")">
+                                                    @if (drawMatch.Player1?.Nationality != null)
+                                                    {
+                                                        <img src="/images/svg/@(drawMatch.Player1.Nationality.Code.ToLower()).svg"
+                                                             alt="@drawMatch.Player1.Nationality.Name"
+                                                             class="flag">
+                                                    }
+                                                    <div class="player-details">
+                                                        <span class="player-name">@(drawMatch.Player1?.Name ?? "TBD")</span>
+                                                        @if (drawMatch.Player1SeedNumber.HasValue)
+                                                        {
+                                                            <span class="player-seed">(@drawMatch.Player1SeedNumber)</span>
+                                                        }
+                                                    </div>
+                                                </div>
+                                                <div class="player @(match.WinnerId == drawMatch.Player2Id ? "winner" : "")">
+                                                    @if (drawMatch.Player2?.Nationality != null)
+                                                    {
+                                                        <img src="/images/svg/@(drawMatch.Player2.Nationality.Code.ToLower()).svg"
+                                                             alt="@drawMatch.Player2.Nationality.Name"
+                                                             class="flag">
+                                                    }
+                                                    <div class="player-details">
+                                                        <span class="player-name">@(drawMatch.Player2?.Name ?? "TBD")</span>
+                                                        @if (drawMatch.Player2SeedNumber.HasValue)
+                                                        {
+                                                            <span class="player-seed">(@drawMatch.Player2SeedNumber)</span>
+                                                        }
+                                                    </div>
+                                                </div>
+                                                <div class="score-container">
+                                                    @{
+                                                        var setScores = match.Score.Split(',');
+                                                        var cleanScores = new List<string>();
+                                                        foreach (var set in setScores)
+                                                        {
+                                                            var score = set.Split('[')[0].Trim();
+                                                            cleanScores.Add(score);
+                                                        }
+                                                    }
+                                                    @foreach (var score in cleanScores)
+                                                    {
+                                                        <div class="set-score">@score</div>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="match-upcoming">
+                                                <div class="player">
+                                                    @if (drawMatch.Player1?.Nationality != null)
+                                                    {
+                                                        <img src="/images/svg/@(drawMatch.Player1.Nationality.Code.ToLower()).svg"
+                                                             alt="@drawMatch.Player1.Nationality.Name"
+                                                             class="flag">
+                                                    }
+                                                    <div class="player-details">
+                                                        <span class="player-name">@(drawMatch.Player1?.Name ?? "TBD")</span>
+                                                        @if (drawMatch.Player1SeedNumber.HasValue)
+                                                        {
+                                                            <span class="player-seed">(@drawMatch.Player1SeedNumber)</span>
+                                                        }
+                                                    </div>
+                                                </div>
+                                                <div class="vs-container">
+                                                    @if (match.Status == MatchStatus.InProgress)
+                                                    {
+                                                        <span class="vs-text live">LIVE</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="vs-text">VS</span>
+                                                    }
+                                                </div>
+                                                <div class="player">
+                                                    @if (drawMatch.Player2?.Nationality != null)
+                                                    {
+                                                        <img src="/images/svg/@(drawMatch.Player2.Nationality.Code.ToLower()).svg"
+                                                             alt="@drawMatch.Player2.Nationality.Name"
+                                                             class="flag">
+                                                    }
+                                                    <div class="player-details">
+                                                        <span class="player-name">@(drawMatch.Player2?.Name ?? "TBD")</span>
+                                                        @if (drawMatch.Player2SeedNumber.HasValue)
+                                                        {
+                                                            <span class="player-seed">(@drawMatch.Player2SeedNumber)</span>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+
+                                        <div class="match-actions">
+                                            <a href="@Url.Action("MatchDetails", "Match", new { drawMatchId = drawMatch.Id })"
+                                               class="btn-match-details"
+                                               title="View match details">
+                                                <i class="fas fa-chevron-right"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="no-matches-container">
+                <div class="no-matches-icon">
+                    <i class="fas fa-info-circle"></i>
+                </div>
+                <h3>No Matches Available</h3>
+                <p>The tournament draw has not been generated yet or no matches are currently scheduled.</p>
+            </div>
+        }
+    </div>
+</div>

@@ -1,0 +1,100 @@
+﻿@* Match Controls Section *@
+<div class="match-controls-wrapper">
+    <div class="match-controls">
+        @if (Model.Match.Status != MatchStatus.Completed)
+        {
+            <button id="simulateBtn" 
+                    class="control-btn primary-btn"
+                    data-match-id="@Model.Match.Id"
+                    data-player1="@Model.Match.Player1?.Name"
+                    data-player2="@Model.Match.Player2?.Name">
+                <i class="fas fa-play-circle"></i>
+                Start Match Simulation
+            </button>
+        }
+        
+        <button id="skipToResultBtn" class="control-btn secondary-btn">
+            <i class="fas fa-forward"></i>
+            Skip to Result
+        </button>
+    </div>
+</div>
+
+<style>
+/* Match Controls Styles */
+.match-controls-wrapper {
+    background: linear-gradient(to bottom, #f8f9fa, #ffffff);
+    padding: 2rem;
+    margin: 1.5rem 0;
+    text-align: center;
+}
+
+.match-controls {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.control-btn {
+    padding: 1rem 3rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 50px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    min-width: 250px;
+}
+
+.control-btn i {
+    font-size: 1.2rem;
+}
+
+.primary-btn {
+    background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+    color: white;
+
+.primary-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.2);
+}
+
+}
+.primary-btn:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+}
+
+.secondary-btn {
+    background: white;
+    color: #343a40;
+    border: 2px solid #e9ecef;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.secondary-btn:hover {
+    background: #f8f9fa;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+@@media (max-width: 576px) {
+    .control-btn {
+        width: 100%;
+        min-width: unset;
+        padding: 0.875rem 2rem;
+        font-size: 1.1rem;
+    }
+    
+    .match-controls {
+        gap: 0.75rem;
+    }
+}
+</style>

@@ -1,0 +1,282 @@
+﻿@{
+    ViewData["Title"] = "Tennis Head-to-Head";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="~/css/MatchDetails.css"/>
+    <title>@ViewData["Title"]</title>
+</head>
+<body>
+    <div class="page-container">
+        <header class="tournament-header">
+            <h1>@ViewData["Title"]</h1>
+        </header>
+        @if (Model != null)
+        {
+            <section class="player-comparison">
+                <div class="player-card">
+                    @if (!string.IsNullOrEmpty(Model.Player1Name))
+                    {
+                        <div class="player-photo-container">
+                            <img src="/images/PlayersPhotos/@(Model.Player1Name).webp"
+                                 alt="Photo of @Model.Player1Name"
+                                 class="player-photo-img"
+                                 onerror="this.src='/images/default-player.webp'">
+                        </div>
+                        <h2 class="player-name">
+                            @if (Model.Player1Nationality != null)
+                            {
+                                <img src="/images/svg/@(Model.Player1Nationality.Code?.ToLower()).svg"
+                                     alt="@Model.Player1Nationality.Name"
+                                     class="flag-img"
+                                     onerror="this.style.display='none'">
+                            }
+                            <a href="/Player/Details/@Model.Player1Id">@Model.Player1Name</a>
+                        </h2>
+                        <div class="wins-count">@Model.Player1Wins</div>
+                        <div>Total Wins</div>
+                    }
+                </div>
+
+                <div class="player-card">
+                    @if (!string.IsNullOrEmpty(Model.Player2Name))
+                    {
+                        <div class="player-photo-container">
+                            <img src="/images/PlayersPhotos/@(Model.Player2Name).webp"
+                                 alt="Photo of @Model.Player2Name"
+                                 class="player-photo-img"
+                                 onerror="this.src='/images/default-player.webp'">
+                        </div>
+                        <h2 class="player-name">
+                            @if (Model.Player2Nationality != null)
+                            {
+                                <img src="/images/svg/@(Model.Player2Nationality.Code?.ToLower()).svg"
+                                     alt="@Model.Player2Nationality.Name"
+                                     class="flag-img"
+                                     onerror="this.style.display='none'">
+                            }
+                            <a href="/Player/Details/@Model.Player2Id">@Model.Player2Name</a>
+                        </h2>
+                        <div class="wins-count">@Model.Player2Wins</div>
+                        <div>Total Wins</div>
+                    }
+                </div>
+            </section>
+
+            <section class="match-section">
+                <h2 class="match-section-title">Matches by Round</h2>
+                <table class="match-table">
+                    <thead>
+                        <tr>
+                            <th>Round</th>
+                            <th>Count</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var stat in Model.RoundStats ?? new Dictionary<string, int>())
+                        {
+                            <tr>
+                                <td>@stat.Key</td>
+                                <td>@stat.Value</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </section>
+
+            <section class="match-section">
+                <h2 class="match-section-title">Match History</h2>
+                <table class="match-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Tournament</th>
+                            <th>Round</th>
+                            <th>Player 1</th>
+                            <th>Score</th>
+                            <th>Player 2</th>
+                            <th>Winner</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var match in Model.HeadToHeadMatches ?? Enumerable.Empty<Match>())
+                        {
+                            <tr>
+                                <td>@match.Date.ToString("MM/dd/yyyy")</td>
+                                <td>@(match.Draw?.Tournament?.Name ?? "N/A")</td>
+                                <td>@match.Round</td>
+                                <td>@(match.Player1?.Name ?? "N/A")</td>
+                                <td>@GetCleanScore(match.Score)</td>
+                                <td>@(match.Player2?.Name ?? "N/A")</td>
+                                <td>@(match.Winner?.Name ?? "N/A")</td>
+                                <td>@match.Status</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </section>
+
+            <section class="match-section">
+                <h2 class="match-section-title">Point by Point Details</h2>
+                @foreach (var match in Model.HeadToHeadMatches ?? Enumerable.Empty<Match>())
+                {
+                    <div class="game-box">
+                        <div class="set-header">
+                            Match Date: @match.Date.ToString("MM/dd/yyyy")
+                            <span class="toggle-icon">+</span>
+                        </div>
+                        <div class="set-details">
+                            @{
+                                RenderPointByPointDetails(match.Score, match.Player1?.Name, match.Player2?.Name);
+                            }
+                        </div>
+                    </div>
+                }
+            </section>
+        }
+        else
+        {
+            <div class="error-message">No data available</div>
+        }
+    </div>
+
+    <script>
+        (function () {
+            try {
+                document.addEventListener('DOMContentLoaded', function () {
+                    const headers = document.querySelectorAll('.set-header');
+
+                    headers.forEach(header => {
+                        header.addEventListener('click', function (e) {
+                            try {
+                                const details = this.nextElementSibling;
+                                const icon = this.querySelector('.toggle-icon');
+
+                                if (details && icon) {
+                                    details.classList.toggle('active');
+                                    icon.textContent = details.classList.contains('active') ? '-' : '+';
+                                }
+                            } catch (err) {
+                                console.error('Error toggling match details:', err);
+                            }
+                        });
+                    });
+                });
+            } catch (err) {
+                console.error('Error initializing event listeners:', err);
+            }
+        })();
+    </script>
+</body>
+</html>
+@functions {
+    private static string GetCleanScore(string score)
+    {
+        if (string.IsNullOrEmpty(score)) return "N/A";
+        try
+        {
+            return string.Join(" ", score.Split(',')
+                .Select(set => set.Split('[')[0].Trim()));
+        }
+        catch
+        {
+            return score;
+        }
+    }
+
+    private static (string Winner, bool IsGame) AnalyzePoint(string point)
+    {
+        if (string.IsNullOrEmpty(point)) return (null, false);
+
+        point = point.Trim('[', ']');
+
+        if (point.EndsWith("-Game"))
+        {
+            return ("player2", true);
+        }
+        else if (point.StartsWith("Game-"))
+        {
+            var score = point.Substring("Game-".Length);
+            return ("player1", true);
+        }
+
+        return (null, false);
+    }
+
+    private static string FormatPoint(string point)
+    {
+        return point?.Trim('[', ']') ?? string.Empty;
+    }
+
+    private void RenderPointByPointDetails(string score, string player1Name, string player2Name)
+    {
+        if (string.IsNullOrEmpty(score) || string.IsNullOrEmpty(player1Name) || string.IsNullOrEmpty(player2Name))
+            return;
+
+        var sets = score.Split(',');
+        for (var setIndex = 0; setIndex < sets.Length; setIndex++)
+        {
+            var setScoreParts = sets[setIndex].Split('[', 2);
+            if (setScoreParts.Length <= 1) continue;
+
+            int player1SetGames = 0;
+            int player2SetGames = 0;
+
+            <div class="game-box">
+                <div class="set-header">
+                    Set @(setIndex + 1) - Score: @setScoreParts[0].Trim()
+                    <span class="toggle-icon">+</span>
+                </div>
+                <div class="set-details">
+                    @{
+                        var pointSets = setScoreParts[1].TrimEnd(']').Split('|');
+                        for (var gameIndex = 0; gameIndex < pointSets.Length; gameIndex++)
+                        {
+                            var points = pointSets[gameIndex].Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                            if (!points.Any()) continue;
+
+                            string? gameWinner = null;
+                            bool isGameDecided = false;
+
+                            <div class="game-number">Game @(gameIndex + 1)</div>
+                            <div class="point-sequence">
+                                @foreach (var point in points)
+                                {
+                                    <span class="point">@FormatPoint(point)</span>
+                                    var (winner, isDecidingPoint) = AnalyzePoint(point);
+
+                                    if (isDecidingPoint)
+                                    {
+                                        gameWinner = winner == "player1" ? player1Name : player2Name;
+                                        isGameDecided = true;
+                                    }
+                                }
+
+                                @if (isGameDecided && gameWinner != null)
+                                {
+                                    if (gameWinner == player1Name)
+                                    {
+                                        player1SetGames++;
+                                    }
+                                    else if (gameWinner == player2Name)
+                                    {
+                                        player2SetGames++;
+                                    }
+
+                                    <div class="game-summary">
+                                        Game won by @gameWinner
+                                        <span class="score-summary">(@player1Name @player1SetGames - @player2Name @player2SetGames)</span>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        }
+    }
+}

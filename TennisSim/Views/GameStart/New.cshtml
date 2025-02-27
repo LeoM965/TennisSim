@@ -1,0 +1,29 @@
+﻿@model TennisSim.Models.UserName
+
+@{
+    ViewData["Title"] = "New Game";
+}
+
+<link rel="stylesheet" type="text/css" href="~/css/newgame.css" />
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card card-custom shadow-lg">
+                <div class="card-body text-center">
+                    <div class="text-center tennis-icon">
+                        <i class="fas fa-tennis-ball fa-5x text-warning"></i>
+                    </div>
+                    <h2 class="mt-4">Welcome to TennisSim, @Model.Username!</h2>
+                    <p class="text-muted">You're ready to start a new tennis game. Let's play!</p>
+
+                    <div class="d-flex justify-content-center mt-5">
+                        <a href="@Url.Action("Start", "Game", new { username = Model.Username })" class="btn btn-primary btn-lg">
+                            <i class="fas fa-play-circle me-2"></i> Start Game
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

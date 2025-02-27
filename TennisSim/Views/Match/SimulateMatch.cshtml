@@ -1,0 +1,120 @@
+﻿@model MatchViewModel
+@{
+    ViewData["Title"] = "Tennis Match Simulation";
+}
+
+<style>
+    .player-card {
+        height: 100%;
+        transition: transform 0.3s ease;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+        .player-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .player-card .card-header {
+            background: linear-gradient(135deg, #1e4c9a 0%, #0056b3 100%);
+            color: white;
+            padding: 1.25rem;
+            font-weight: 600;
+        }
+
+        .player-card .card-body {
+            padding: 1.5rem;
+        }
+
+    .attribute-item {
+        margin-bottom: 1rem;
+        padding: 0.75rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        transition: background-color 0.2s ease;
+    }
+
+        .attribute-item:hover {
+            background: #e9ecef;
+        }
+
+        .attribute-item:last-child {
+            margin-bottom: 0;
+        }
+
+    .progress {
+        height: 0.75rem;
+        border-radius: 1rem;
+        background-color: #e9ecef;
+        overflow: hidden;
+        margin-top: 0.5rem;
+    }
+
+    .progress-bar {
+        background: linear-gradient(90deg, #0056b3 0%, #0275d8 100%);
+        transition: width 0.3s ease;
+    }
+</style>
+
+<div class="tennis-match">
+    <div class="container">
+        <h1 class="text-center mb-4">Tennis Match Simulation</h1>
+
+        @if (Model?.Match == null)
+        {
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                Match data is not available.
+            </div>
+        }
+        else
+        {
+            <partial name="_MatchHeader" model="Model" />
+            <partial name="_MatchControls" model="Model" />
+            <partial name="_MatchDisplay" model="Model" />
+
+            <div class="row mb-4">
+                @foreach (var (player, attributes) in new[] {
+            (Model.Match.Player1, Model.Player1Attributes),
+            (Model.Match.Player2, Model.Player2Attributes)
+            })
+                {
+                    <div class="col-md-6">
+                        <div class="player-card card">
+                            <div class="card-header">
+                                <h3 class="mb-0">@(player?.Name ?? "Player")</h3>
+                            </div>
+                            <div class="card-body">
+                                @if (attributes?.Any() == true)
+                                {
+                                    foreach (var attr in attributes)
+                                    {
+                                        <div class="attribute-item mb-3">
+                                            <div class="d-flex justify-content-between mb-2">
+                                                <span>@attr.AttributeType</span>
+                                                <span>@attr.Value%</span>
+                                            </div>
+                                            <div class="progress">
+                                                <div class="progress-bar" style="width: @attr.Value%"></div>
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <p class="text-muted">No statistics available</p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/TennisMatchSimulator.js"></script>
+}
