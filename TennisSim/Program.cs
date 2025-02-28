@@ -4,6 +4,7 @@ using TennisSim.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITournamentService, TournamentService>();
 builder.Services.AddScoped<IEntryListService, EntryListService>();
@@ -41,6 +42,7 @@ app.UseRouting();
 app.UseAuthorization();
 
 app.UseSession();
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");

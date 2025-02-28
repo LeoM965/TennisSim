@@ -34,27 +34,34 @@ public class PlayerController : Controller
         if (user == null)
             return NotFound("User not found");
 
-        await _rankingService.UpdateRankingsAsync(user.CurrentDate);
+        await _rankingService.UpdateRankingsAsync(user.CurrentDate, user.Id);
 
-        var playersQuery = await _context.Players
+        var latestRankingDate = await _context.Rankings
+            .Where(r => r.UserId == user.Id)
+            .OrderByDescending(r => r.Date)
+            .Select(r => r.Date)
+            .FirstOrDefaultAsync();
+
+        var players = await _context.Players
             .AsNoTracking()
             .Include(p => p.Nationality)
-            .Include(p => p.Rankings.OrderByDescending(r => r.Date))
-            .Select(p => new
-            {
-                Player = p,
-                LatestRanking = p.Rankings.OrderByDescending(r => r.Date).FirstOrDefault()
-            })
-            .OrderByDescending(x => x.LatestRanking != null ? x.LatestRanking.Points : 0)
+            .Include(p => p.Rankings.Where(r => r.UserId == user.Id && r.Date == latestRankingDate))
             .ToListAsync();
 
-        var sortedPlayers = playersQuery
-            .Select((item, index) =>
+        var userRankings = await _context.Rankings
+            .Where(r => r.UserId == user.Id && r.Date == latestRankingDate)
+            .ToListAsync();
+
+        foreach (var player in players)
+        {
+            var ranking = userRankings.FirstOrDefault(r => r.PlayerId == player.Id);
+            if (ranking != null)
             {
-                item.Player.Ranking = index + 1;
-                return item.Player;
-            })
-            .ToList();
+                player.Ranking = ranking.Rank;
+            }
+        }
+
+        var sortedPlayers = players.OrderBy(p => p.Ranking == 0 ? int.MaxValue : p.Ranking).ToList();
 
         ViewData["CurrentDate"] = user.CurrentDate.ToString("d MMMM yyyy");
 
@@ -77,9 +84,9 @@ public class PlayerController : Controller
             return NotFound("User not found");
 
         var player = await _context.Players
-            .Include(p => p.Rankings.OrderByDescending(r => r.Date).Take(10))
             .Include(p => p.Nationality)
             .Include(p => p.Attributes)
+            .Include(p => p.Rankings.Where(r => r.UserId == user.Id))
             .FirstOrDefaultAsync(p => p.Id == id);
 
         if (player == null)
@@ -109,28 +116,48 @@ public class PlayerController : Controller
             .Distinct()
             .ToList();
 
-        var rankings = await _context.Rankings
-            .Where(r => playerIds.Contains(r.PlayerId))
+        var rankingsForPlayers = await _context.Rankings
+            .Where(r => playerIds.Contains(r.PlayerId) && r.UserId == user.Id)
             .ToListAsync();
 
         foreach (var match in matches)
         {
             if (match.Player1 != null)
             {
-                var player1Ranking = rankings
-                    .Where(r => r.PlayerId == match.Player1Id && r.Date.Date <= match.Date.Date)
+                var player1Rankings = rankingsForPlayers
+                    .Where(r => r.PlayerId == match.Player1Id)
+                    .ToList();
+
+                match.Player1.Rankings = player1Rankings;
+
+                var player1Ranking = player1Rankings
+                    .Where(r => r.Date.Date <= match.Date.Date)
                     .OrderByDescending(r => r.Date)
                     .FirstOrDefault();
-                match.Player1.Ranking = player1Ranking?.Points ?? 0;
+
+                if (player1Ranking != null)
+                {
+                    match.Player1.Ranking = player1Ranking.Rank;
+                }
             }
 
             if (match.Player2 != null)
             {
-                var player2Ranking = rankings
-                    .Where(r => r.PlayerId == match.Player2Id && r.Date.Date <= match.Date.Date)
+                var player2Rankings = rankingsForPlayers
+                    .Where(r => r.PlayerId == match.Player2Id)
+                    .ToList();
+
+                match.Player2.Rankings = player2Rankings;
+
+                var player2Ranking = player2Rankings
+                    .Where(r => r.Date.Date <= match.Date.Date)
                     .OrderByDescending(r => r.Date)
                     .FirstOrDefault();
-                match.Player2.Ranking = player2Ranking?.Points ?? 0;
+
+                if (player2Ranking != null)
+                {
+                    match.Player2.Ranking = player2Ranking.Rank;
+                }
             }
         }
 
@@ -168,7 +195,7 @@ public class PlayerController : Controller
         if (user == null)
             return NotFound("User not found");
 
-        await _rankingService.UpdateRankingsAsync(user.CurrentDate);
+        await _rankingService.UpdateRankingsAsync(user.CurrentDate, user.Id);
         return RedirectToAction(nameof(Index));
     }
 }
