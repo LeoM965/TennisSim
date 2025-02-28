@@ -1,36 +1,64 @@
 ﻿@model IEnumerable<TennisSim.Models.Draw>
 
-<div class="container">
-    <h2>Tournament Draws</h2>
 
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Tournament</th>
-                <th>Start Date</th>
-                <th>Category</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var draw in Model)
-            {
-                <tr>
-                    <td>@draw.Tournament.Name</td>
-                    <td>@draw.Tournament.StartDate.ToShortDateString()</td>
-                    <td>@draw.Tournament.Category</td>
-                    <td>
-                        <a asp-action="GenerateDraw" asp-route-tournamentId="@draw.TournamentId" class="btn btn-primary btn-sm">View Draw</a>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+<link href="~/css/DrawIndex.css" rel="stylesheet" />
 
-    @if (!Model.Any())
-    {
-        <div class="alert alert-info">
-            No draws available yet.
+<div class="container-fluid tournament-section">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="section-heading">Tournament Draws</h2>
+            <div class="tournament-container">
+                @if (Model.Any())
+                {
+                    <div class="tournament-list">
+                        <div class="table-responsive">
+                            <table class="table tournament-table">
+                                <thead>
+                                    <tr>
+                                        <th class="tournament-name">Tournament</th>
+                                        <th class="tournament-date">Date</th>
+                                        <th class="tournament-category">Category</th>
+                                        <th class="tournament-actions">View</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var draw in Model)
+                                    {
+                                        <tr>
+                                            <td class="tournament-name">
+                                                <strong>@draw.Tournament.Name</strong>
+                                            </td>
+                                            <td class="tournament-date">
+                                                @draw.Tournament.StartDate.ToString("MMM d, yyyy")
+                                            </td>
+                                            <td class="tournament-category">
+                                                <span class="category-badge @draw.Tournament.Category">
+                                                    @draw.Tournament.Category
+                                                </span>
+                                            </td>
+                                            <td class="tournament-actions">
+                                                <a asp-action="GenerateDraw" asp-route-tournamentId="@draw.TournamentId" class="btn btn-view">
+                                                    <i class="fa fa-table"></i> View Draw
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <i class="fa fa-calendar-xmark"></i>
+                        </div>
+                        <h3>No Tournament Draws Available</h3>
+                        <p>Check back soon for upcoming tournament draws.</p>
+                    </div>
+                }
+            </div>
         </div>
-    }
+    </div>
 </div>
