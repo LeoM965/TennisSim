@@ -14,10 +14,4 @@ public class Nationality
         Players = new List<Player>();
     }
 
-    public Nationality(string name, string code)
-    {
-        Name = name;
-        Code = code;
-        Players = new List<Player>();
-    }
 }

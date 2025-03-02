@@ -18,6 +18,7 @@
             Rank = 0;
             Points = 0;
             UserId = 0;
+            User = null!;
         }
     }
 }

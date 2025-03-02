@@ -17,13 +17,6 @@ public class Match
     public MatchStatus Status { get; set; } = MatchStatus.Scheduled;
     public Match() { }
 
-    public Match(int player1Id, int player2Id, int drawId, DateTime date)
-    {
-        Player1Id = player1Id;
-        Player2Id = player2Id;
-        DrawId = drawId;
-        Date = date;
-    }
 }
 
 public class MatchViewModel
@@ -57,12 +50,11 @@ public class MatchDetailsViewModel
     public string Player2Name { get; set; } = string.Empty;
     public int Player1Wins { get; set; }
     public int Player2Wins { get; set; }
-    public string LastMatchDate { get; set; } = string.Empty;
     public Dictionary<string, int> RoundStats { get; set; } = new Dictionary<string, int>();
     public string TournamentName { get; set; } = string.Empty;
     public Nationality Player1Nationality { get; set; } = null!;
     public Nationality Player2Nationality { get; set; } = null!;
-    public int UserId { get; set; } 
+    public int UserId { get; set; }
     public MatchDetailsViewModel() { }
 
     public MatchDetailsViewModel(int player1Id, int player2Id, string player1Name, string player2Name)

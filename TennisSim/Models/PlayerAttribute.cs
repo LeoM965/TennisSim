@@ -2,7 +2,7 @@
 
 namespace TennisSim.Models
 {
-    [Table("PlayerAttributes")] 
+    [Table("PlayerAttributes")]
     public class PlayerAttribute
     {
         public PlayerAttribute()
@@ -10,15 +10,6 @@ namespace TennisSim.Models
             AttributeType = string.Empty;
             Player = null!;
         }
-
-        public PlayerAttribute(int playerId, string attributeType, int value)
-        {
-            PlayerId = playerId;
-            AttributeType = attributeType;
-            Player = null!;
-            Value = value;
-        }
-
         public int Id { get; set; }
         public int PlayerId { get; set; }
 

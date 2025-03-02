@@ -34,6 +34,19 @@ public class PlayerController : Controller
         if (user == null)
             return NotFound("User not found");
 
+        // Check if current date is between December 23-31
+        bool isRankingPeriod = !(user.CurrentDate.Month == 12 &&
+                                 user.CurrentDate.Day >= 23 &&
+                                 user.CurrentDate.Day <= 31);
+
+        if (!isRankingPeriod)
+        {
+            // Return a view with a message that rankings are not available
+            ViewData["CurrentDate"] = user.CurrentDate.ToString("d MMMM yyyy");
+            ViewData["RankingsMessage"] = "Rankings are not available between December 23-31.";
+            return View("RankingsUnavailable");
+        }
+
         await _rankingService.UpdateRankingsAsync(user.CurrentDate, user.Id);
 
         var latestRankingDate = await _context.Rankings
@@ -45,7 +58,7 @@ public class PlayerController : Controller
         var players = await _context.Players
             .AsNoTracking()
             .Include(p => p.Nationality)
-            .Include(p => p.Rankings.Where(r => r.UserId == user.Id && r.Date == latestRankingDate))
+            .Include(p => p.Rankings.Where(r => r.UserId == user.Id))
             .ToListAsync();
 
         var userRankings = await _context.Rankings
@@ -127,14 +140,14 @@ public class PlayerController : Controller
                 var player1Rankings = rankingsForPlayers
                     .Where(r => r.PlayerId == match.Player1Id)
                     .ToList();
-
+                
                 match.Player1.Rankings = player1Rankings;
-
+                
                 var player1Ranking = player1Rankings
                     .Where(r => r.Date.Date <= match.Date.Date)
                     .OrderByDescending(r => r.Date)
                     .FirstOrDefault();
-
+                
                 if (player1Ranking != null)
                 {
                     match.Player1.Ranking = player1Ranking.Rank;
@@ -146,14 +159,14 @@ public class PlayerController : Controller
                 var player2Rankings = rankingsForPlayers
                     .Where(r => r.PlayerId == match.Player2Id)
                     .ToList();
-
+                
                 match.Player2.Rankings = player2Rankings;
-
+                
                 var player2Ranking = player2Rankings
                     .Where(r => r.Date.Date <= match.Date.Date)
                     .OrderByDescending(r => r.Date)
                     .FirstOrDefault();
-
+                
                 if (player2Ranking != null)
                 {
                     match.Player2.Ranking = player2Ranking.Rank;
@@ -180,22 +193,4 @@ public class PlayerController : Controller
         return View(viewModel);
     }
 
-    public async Task<IActionResult> UpdateRankings()
-    {
-        if (!HttpContext.Session.Keys.Contains("Username"))
-            return RedirectToAction("EnterUsername", "GameStart");
-
-        string? username = HttpContext.Session.GetString("Username");
-        if (string.IsNullOrEmpty(username))
-            return RedirectToAction("EnterUsername", "GameStart");
-
-        var user = await _context.UserNames
-            .FirstOrDefaultAsync(u => u.Username == username);
-
-        if (user == null)
-            return NotFound("User not found");
-
-        await _rankingService.UpdateRankingsAsync(user.CurrentDate, user.Id);
-        return RedirectToAction(nameof(Index));
-    }
 }
