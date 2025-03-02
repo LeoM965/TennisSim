@@ -76,7 +76,7 @@ public class GameController : Controller
                 return Json(new
                 {
                     success = false,
-                    message = $"You must view both the entry list and draw for {tournament.Name} before proceeding."
+                    message = $"You must view both the entry list and draw for {tournament.Name} before proceeding. YOU SHOULD SEE ENTRY LIST FIRST!!!"
                 });
             }
         }
