@@ -115,7 +115,6 @@ namespace TennisSim.Controllers
                 if (tournament == null)
                     return NotFound("Tournament not found");
 
-                // Verifică și utilizează username-ul din sesiune dacă nu este furnizat
                 if (string.IsNullOrEmpty(username))
                 {
                     if (!HttpContext.Session.Keys.Contains("Username"))

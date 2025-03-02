@@ -118,20 +118,23 @@ namespace TennisSim.Controllers
                 }
                 else
                 {
-                    entryList = tournament.UserEntryLists?
-                        .Where(uel => uel.EntryList != null)
-                        .SelectMany(uel => uel.EntryList)
-                        .OrderBy(e => e.Rank)
-                        .ToList() ?? new List<EntryList>();
+                    TempData["ErrorMessage"] = "You must view the entry list before generating the draw. This ensures that the correct players are included.";
+                    return RedirectToAction("Details", "Tournament", new { id = tournamentId });
                 }
 
                 if (entryList.Count == 0)
                 {
-                    ViewData["ErrorMessage"] = "No entry list found for this tournament";
-                    return View("Error");
+                    TempData["ErrorMessage"] = "Entry list is empty. Please select players for the draw first.";
+                    return RedirectToAction("Details", "Tournament", new { id = tournamentId });
                 }
 
                 var playerNames = entryList.Select(e => e.PlayerName).ToList();
+                if (playerNames.Count != playerNames.Distinct().Count())
+                {
+                    TempData["ErrorMessage"] = "Entry list contains duplicate players. Please fix the entry list first.";
+                    return RedirectToAction("Details", "Tournament", new { id = tournamentId });
+                }
+
                 var allPlayers = _context.Players
                     .Where(p => playerNames.Contains(p.Name))
                     .ToDictionary(p => p.Name, p => p);
@@ -140,8 +143,8 @@ namespace TennisSim.Controllers
                 if (missingPlayers.Any())
                 {
                     var missingPlayersMessage = string.Join(", ", missingPlayers);
-                    ViewData["ErrorMessage"] = $"The following players were not found in the database: {missingPlayersMessage}";
-                    return View("Error");
+                    TempData["ErrorMessage"] = $"The following players were not found in the database: {missingPlayersMessage}";
+                    return RedirectToAction("Details", "Tournament", new { id = tournamentId });
                 }
 
                 var draw = _drawService.CreateNewDraw(tournament, entryList, user.Id);
@@ -149,8 +152,8 @@ namespace TennisSim.Controllers
             }
             catch (Exception ex)
             {
-                ViewData["ErrorMessage"] = $"Failed to generate draw: {ex.Message}";
-                return View("Error");
+                TempData["ErrorMessage"] = $"Failed to generate draw: {ex.Message}";
+                return RedirectToAction("Details", "Tournament", new { id = tournamentId });
             }
         }
 

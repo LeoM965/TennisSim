@@ -2,6 +2,12 @@
 
 <link href="~/css/draw1.css" rel="stylesheet" />
 
+@if (!string.IsNullOrEmpty(TempData["ErrorMessage"] as string))
+{
+    <div class="alert alert-danger">
+        @TempData["ErrorMessage"]
+    </div>
+}
 
 <div class="tournament-draw">
     <div class="tournament-header">
@@ -15,7 +21,13 @@
         </div>
     </div>
 
-    @if (Model.DrawMatches != null && Model.DrawMatches.Any())
+    @if (ViewData["DrawMessage"] != null)
+    {
+        <div class="draw-message">
+            <p>@ViewData["DrawMessage"]</p>
+        </div>
+    }
+    else if (Model.DrawMatches != null && Model.DrawMatches.Any())
     {
         <div class="draw-container">
             @{
@@ -52,7 +64,7 @@
                                         6 => "Final",
                                         _ => $"Round {round.Key}"
                                     },
-                                    _ => round.Key switch 
+                                    _ => round.Key switch
                                     {
                                         1 => "First Round",
                                         2 => "Second Round",
@@ -151,4 +163,3 @@
         </div>
     }
 </div>
-

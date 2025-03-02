@@ -52,16 +52,13 @@ namespace TennisSim.Services
 
         public async Task UpdateRankingsAsync(DateTime targetDate, int userId)
         {
-            if (targetDate.DayOfWeek != DayOfWeek.Monday)
-                return;
+            if (targetDate.DayOfWeek != DayOfWeek.Monday) return;
+
             var thisMonday = targetDate.Date;
             var lastMonday = thisMonday.AddDays(-7);
 
-            // Check if rankings for this user on this date already exist
-            if (await _context.Rankings.AnyAsync(r => r.Date == thisMonday && r.UserId == userId))
-                return;
+            if (await _context.Rankings.AnyAsync(r => r.Date == thisMonday && r.UserId == userId)) return;
 
-            // Get matches from user's tournaments only
             var userDrawIds = await _context.Draws
                 .Where(d => d.UserId == userId)
                 .Select(d => d.Id)
@@ -80,70 +77,89 @@ namespace TennisSim.Services
 
             var newRankings = new List<Ranking>();
 
-            // Check if this is the first week of rankings for this user
             bool isFirstWeek = !await _context.Rankings.AnyAsync(r => r.UserId == userId);
 
             if (isFirstWeek)
-            {
-                // Get rankings from userId = 0 to use as initial rankings
-                var systemRankings = await _context.Rankings
+            { 
+                var latestSystemDate = await _context.Rankings
                     .Where(r => r.UserId == 0)
-                    .GroupBy(r => r.PlayerId)
-                    .Select(g => g.OrderByDescending(r => r.Date).First())
+                    .MaxAsync(r => r.Date);
+
+                var systemRankings = await _context.Rankings
+                    .Where(r => r.UserId == 0 && r.Date == latestSystemDate)
                     .ToListAsync();
 
-                // Use system rankings as a starting point
-                foreach (var systemRank in systemRankings)
+             
+                if (systemRankings.Count == 0)
                 {
-                    newRankings.Add(new Ranking
+                    var allPlayers = await _context.Players.ToListAsync();
+
+                    foreach (var player in allPlayers)
                     {
-                        PlayerId = systemRank.PlayerId,
-                        Points = systemRank.Points,
-                        Date = thisMonday,
-                        UserId = userId,
-                        Rank = systemRank.Rank
-                    });
+                        var initialPoints = 1000; 
+
+                        newRankings.Add(new Ranking
+                        {
+                            PlayerId = player.Id,
+                            Points = initialPoints,
+                            Date = thisMonday,
+                            UserId = userId,
+                            Rank = 0 
+                        });
+                    }
                 }
-
-                // Add any players who are not in system rankings
-                var rankedPlayerIds = systemRankings.Select(r => r.PlayerId).ToList();
-                var allPlayers = await _context.Players.Select(p => p.Id).ToListAsync();
-                var unrankedPlayerIds = allPlayers.Except(rankedPlayerIds).ToList();
-
-                foreach (var playerId in unrankedPlayerIds)
+                else
                 {
-                    newRankings.Add(new Ranking
+                    foreach (var systemRank in systemRankings)
                     {
-                        PlayerId = playerId,
-                        Points = 0,
-                        Date = thisMonday,
-                        UserId = userId,
-                        Rank = 0
-                    });
+                        newRankings.Add(new Ranking
+                        {
+                            PlayerId = systemRank.PlayerId,
+                            Points = systemRank.Points,
+                            Date = thisMonday,
+                            UserId = userId,
+                            Rank = systemRank.Rank
+                        });
+                    }
+
+                    var rankedPlayerIds = systemRankings.Select(r => r.PlayerId).ToList();
+                    var allPlayers = await _context.Players.Select(p => p.Id).ToListAsync();
+                    var unrankedPlayerIds = allPlayers.Except(rankedPlayerIds).ToList();
+
+                    foreach (var playerId in unrankedPlayerIds)
+                    {
+                        newRankings.Add(new Ranking
+                        {
+                            PlayerId = playerId,
+                            Points = 0,
+                            Date = thisMonday,
+                            UserId = userId,
+                            Rank = 0 
+                        });
+                    }
                 }
             }
             else
             {
-                // Get previous rankings for this user
+                var latestPreviousDate = await _context.Rankings
+                    .Where(r => r.UserId == userId && r.Date < thisMonday)
+                    .MaxAsync(r => r.Date);
+
                 var previousRankings = await _context.Rankings
-                    .Where(r => r.Date < thisMonday && r.UserId == userId)
-                    .GroupBy(r => r.PlayerId)
-                    .Select(g => g.OrderByDescending(r => r.Date).First())
+                    .Where(r => r.UserId == userId && r.Date == latestPreviousDate)
                     .ToListAsync();
 
-                // If no previous rankings exist for some players, we need to add them
-                var allPlayers = await _context.Players.Select(p => p.Id).ToListAsync();
                 var rankedPlayerIds = previousRankings.Select(r => r.PlayerId).ToList();
+                var allPlayers = await _context.Players.Select(p => p.Id).ToListAsync();
                 var unrankedPlayerIds = allPlayers.Except(rankedPlayerIds).ToList();
 
-                // Add initial rankings for unranked players
                 foreach (var playerId in unrankedPlayerIds)
                 {
                     previousRankings.Add(new Ranking
                     {
                         PlayerId = playerId,
                         Points = 0,
-                        Date = lastMonday,
+                        Date = latestPreviousDate,
                         UserId = userId,
                         Rank = 0
                     });
@@ -176,7 +192,6 @@ namespace TennisSim.Services
                 }
             }
 
-            // Sort and assign ranks
             var sortedRankings = newRankings
                 .OrderByDescending(r => r.Points)
                 .ToList();
