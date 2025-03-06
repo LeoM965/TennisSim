@@ -27,12 +27,12 @@ public class MatchSimulation
         double p2Strength = CalculatePlayerScore(p2Attributes);
         double winProbability = p1Strength / (p1Strength + p2Strength);
 
-        var sets = new List<SetResult>();
+        List<SetResult> sets = new List<SetResult>();
         int p1Sets = 0, p2Sets = 0;
 
         while (Math.Max(p1Sets, p2Sets) < 2)
         {
-            var set = SimulateSet(winProbability);
+            SetResult set = SimulateSet(winProbability);
             sets.Add(set);
             if (set.P1Score > set.P2Score) p1Sets++; else p2Sets++;
         }
@@ -42,14 +42,14 @@ public class MatchSimulation
 
     private SetResult SimulateSet(double winProbability)
     {
-        var games = new List<GameResult>();
+        List<GameResult> games = new List<GameResult>();
         int p1Games = 0, p2Games = 0;
 
         while (!IsSetFinished(p1Games, p2Games))
         {
             if (p1Games == 6 && p2Games == 6)
             {
-                var tiebreak = SimulateTiebreak(winProbability);
+                TiebreakResult tiebreak = SimulateTiebreak(winProbability);
                 games.Add(new GameResult(tiebreak.WinnerIsPlayer1, tiebreak.Points));
 
                 if (tiebreak.WinnerIsPlayer1)
@@ -60,7 +60,7 @@ public class MatchSimulation
                 return new SetResult(p1Games, p2Games, games, tiebreak);
             }
 
-            var game = SimulateGame(winProbability);
+            GameResult game = SimulateGame(winProbability);
             games.Add(game);
 
             if (game.WinnerIsPlayer1) p1Games++; else p2Games++;
@@ -78,7 +78,7 @@ public class MatchSimulation
 
     private TiebreakResult SimulateTiebreak(double winProbability)
     {
-        var points = new List<PointResult>();
+        List<PointResult> points = new List<PointResult>();
         int p1Score = 0, p2Score = 0;
 
         while (!IsTiebreakFinished(p1Score, p2Score))
@@ -115,8 +115,8 @@ public class MatchSimulation
 
     private GameResult SimulateGame(double winProbability)
     {
-        var points = new List<PointResult>();
-        var score = new GameScore();
+        List<PointResult> points = new List<PointResult>();
+        GameScore score = new GameScore();
         string lastP1Score = "";
         string lastP2Score = "";
 
@@ -241,18 +241,16 @@ public class MatchSimulation
         foreach (var attribute in attributes)
         {
             double attributeValue = attribute.Value;
-
             string attributeType = attribute.AttributeType;
-
             double attributeWeight;
 
             if (AttributeWeights.TryGetValue(attributeType, out var weight))
             {
-                attributeWeight = weight; 
+                attributeWeight = weight;
             }
             else
             {
-                attributeWeight = 1.0; 
+                attributeWeight = 1.0;
             }
 
             double weightedAttributeScore = attributeValue * attributeWeight;

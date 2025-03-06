@@ -3,62 +3,184 @@
 
 <link href="~/css/DrawIndex.css" rel="stylesheet" />
 
-<div class="container-fluid tournament-section">
-    <div class="row">
-        <div class="col-12">
-            <h2 class="section-heading">Tournament Draws</h2>
-            <div class="tournament-container">
-                @if (Model.Any())
+<div class="tournament-section">
+    <div class="section-header">
+        <h2>Tournament Draws</h2>
+    </div>
+    
+    <div class="draws-container">
+        @if (Model.Any())
+        {
+            <div class="draws-table">
+                <div class="table-header">
+                    <div class="col-name">Tournament</div>
+                    <div class="col-date">Date</div>
+                    <div class="col-category">Category</div>
+                    <div class="col-actions">View</div>
+                </div>
+                
+                @foreach (Draw draw in Model)
                 {
-                    <div class="tournament-list">
-                        <div class="table-responsive">
-                            <table class="table tournament-table">
-                                <thead>
-                                    <tr>
-                                        <th class="tournament-name">Tournament</th>
-                                        <th class="tournament-date">Date</th>
-                                        <th class="tournament-category">Category</th>
-                                        <th class="tournament-actions">View</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var draw in Model)
-                                    {
-                                        <tr>
-                                            <td class="tournament-name">
-                                                <strong>@draw.Tournament.Name</strong>
-                                            </td>
-                                            <td class="tournament-date">
-                                                @draw.Tournament.StartDate.ToString("MMM d, yyyy")
-                                            </td>
-                                            <td class="tournament-category">
-                                                <span class="category-badge @draw.Tournament.Category">
-                                                    @draw.Tournament.Category
-                                                </span>
-                                            </td>
-                                            <td class="tournament-actions">
-                                                <a asp-action="GenerateDraw" asp-route-tournamentId="@draw.TournamentId" class="btn btn-view">
-                                                    <i class="fa fa-table"></i> View Draw
-                                                </a>
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
+                    <div class="draw-row">
+                        <div class="col-name">
+                            <span class="tournament-title">@draw.Tournament.Name</span>
                         </div>
-                    </div>
-                }
-                else
-                {
-                    <div class="empty-state">
-                        <div class="empty-state-icon">
-                            <i class="fa fa-calendar-xmark"></i>
+                        <div class="col-date">@draw.Tournament.StartDate.ToString("MMM d, yyyy")</div>
+                        <div class="col-category">
+                            <span class="category-label @draw.Tournament.Category">
+                                @draw.Tournament.Category
+                            </span>
                         </div>
-                        <h3>No Tournament Draws Available</h3>
-                        <p>Check back soon for upcoming tournament draws.</p>
+                        <div class="col-actions">
+                            <a class="view-link" href="/Draw/GenerateDraw?tournamentId=@draw.TournamentId">
+                                <span class="link-icon"></span>
+                                View Draw
+                            </a>
+                        </div>
                     </div>
                 }
             </div>
-        </div>
+        }
+        else
+        {
+            <div class="no-draws">
+                <div class="calendar-icon"></div>
+                <h3>No Tournament Draws Available</h3>
+                <p>Check back soon for upcoming tournament draws.</p>
+            </div>
+        }
     </div>
 </div>
+
+<style>
+.tournament-section {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 20px;
+}
+
+.section-header {
+    border-bottom: 2px solid #d1347a;
+    margin-bottom: 25px;
+}
+
+.section-header h2 {
+    color: #d1347a;
+    margin: 0 0 10px 0;
+}
+
+.draws-table {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.table-header {
+    display: flex;
+    padding: 15px;
+    background: #f8f8f8;
+    font-weight: bold;
+    border-bottom: 2px solid #ddd;
+}
+
+.draw-row {
+    display: flex;
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.draw-row:hover {
+    background-color: #fafafa;
+}
+
+.col-name { width: 35%; }
+.col-date { width: 20%; }
+.col-category { width: 25%; }
+.col-actions { width: 20%; }
+
+.tournament-title {
+    font-weight: 600;
+    color: #333;
+}
+
+.category-label {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 14px;
+}
+
+.category-label.grandslam { background: #5928e5; color: white; }
+.category-label.wta1000 { background: #ff5733; color: white; }
+.category-label.wta500 { background: #33a0ff; color: white; }
+.category-label.wta250 { background: #33ff57; color: #333; }
+
+.view-link {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 15px;
+    background: #d1347a;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+}
+
+.link-icon {
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+    margin-right: 8px;
+    background: white;
+    position: relative;
+}
+
+.link-icon::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    right: 2px;
+    bottom: 2px;
+    border: 1px solid #d1347a;
+}
+
+.no-draws {
+    text-align: center;
+    padding: 40px 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.calendar-icon {
+    width: 50px;
+    height: 50px;
+    margin: 0 auto 20px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    position: relative;
+}
+
+.calendar-icon::before {
+    content: "1";
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    background: white;
+    padding: 0 5px;
+    color: #ddd;
+}
+
+@@media (max-width: 768px) {
+    .draws-table {
+        overflow-x: auto;
+    }
+    
+    .table-header,
+    .draw-row {
+        min-width: 700px;
+    }
+}
+</style>

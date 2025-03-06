@@ -23,13 +23,13 @@ namespace TennisSim.Controllers
             if (string.IsNullOrEmpty(username))
                 return RedirectToAction("EnterUsername", "GameStart");
 
-            var user = await _context.UserNames
+            UserName? user = await _context.UserNames
                 .FirstOrDefaultAsync(u => u.Username == username);
 
             if (user == null)
                 return NotFound("User not found");
 
-            var tournament = await _context.Tournaments
+            Tournament? tournament = await _context.Tournaments
                 .Include(t => t.Draws.Where(d => d.UserId == user.Id))
                 .ThenInclude(d => d.DrawMatches)
                 .ThenInclude(dm => dm.Player1)
@@ -66,13 +66,13 @@ namespace TennisSim.Controllers
             if (string.IsNullOrEmpty(username))
                 return RedirectToAction("EnterUsername", "GameStart");
 
-            var user = await _context.UserNames
+            UserName? user = await _context.UserNames
                 .FirstOrDefaultAsync(u => u.Username == username);
 
             if (user == null)
                 return NotFound("User not found");
 
-            var tournament = await _context.Tournaments
+            Tournament? tournament = await _context.Tournaments
                 .Include(t => t.Draws.Where(d => d.UserId == user.Id))
                 .ThenInclude(d => d.DrawMatches)
                 .ThenInclude(dm => dm.Player1)

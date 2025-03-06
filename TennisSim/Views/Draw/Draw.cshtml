@@ -31,17 +31,17 @@
     {
         <div class="draw-container">
             @{
-                var rounds = Model.DrawMatches
+                List<IGrouping<int, DrawMatch>> rounds = Model.DrawMatches
                 .GroupBy(m => m.Round)
                 .OrderBy(g => g.Key)
                 .ToList();
 
-                foreach (var round in rounds)
+                foreach (IGrouping<int, DrawMatch> round in rounds)
                 {
                     <div class="round">
                         <div class="round-header">
                             @{
-                                var roundName = Model.Tournament?.Category switch
+                                string roundName = Model.Tournament?.Category switch
                                 {
                                     TournamentCategory.GrandSlam or TournamentCategory.Masters1000 => round.Key switch
                                     {
@@ -79,7 +79,7 @@
                         </div>
 
                         <div class="matches">
-                            @foreach (var match in round.OrderBy(m => m.MatchNumber))
+                            @foreach (DrawMatch match in round.OrderBy(m => m.MatchNumber))
                             {
                                 <div class="match">
                                     <div class="match-number">@match.MatchNumber</div>

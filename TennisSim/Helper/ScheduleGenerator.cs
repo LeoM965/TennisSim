@@ -16,12 +16,12 @@ namespace TennisSim.Services
         public List<Schedule> GenerateSchedule(Draw draw)
         {
             Console.WriteLine($"[ScheduleGenerator] Generating schedule for DrawId={draw.Id}");
-            var schedules = new List<Schedule>();
-            var courts = GetCourtConfiguration();
-            var matchesByRound = GroupMatchesByRound(draw.DrawMatches);
+            List<Schedule> schedules = new List<Schedule>();
+            (List<string> Names, int MatchesPerCourt) courts = GetCourtConfiguration();
+            Dictionary<int, List<DrawMatch>> matchesByRound = GroupMatchesByRound(draw.DrawMatches);
             int totalRounds = GetTotalRounds();
 
-            var daysPerRound = _tournament.Category switch
+            Dictionary<int, int> daysPerRound = _tournament.Category switch
             {
                 TournamentCategory.GrandSlam or TournamentCategory.Masters1000 => new Dictionary<int, int>
                 {
@@ -45,7 +45,7 @@ namespace TennisSim.Services
 
                 Console.WriteLine($"[ScheduleGenerator] Processing Round={round}");
 
-                var unscheduledMatches = matchesByRound[round]
+                List<DrawMatch> unscheduledMatches = matchesByRound[round]
                     .Where(m => !_scheduledMatchIds.Contains(m.Id))
                     .OrderBy(m => Math.Min(GetPlayerBestRank(m.Player1), GetPlayerBestRank(m.Player2)))
                     .ToList();
@@ -77,7 +77,7 @@ namespace TennisSim.Services
 
             for (int day = 0; day < days && matchIndex < matches.Count; day++, currentDate = currentDate.AddDays(1))
             {
-                var dailySchedule = new Schedule
+                Schedule dailySchedule = new Schedule
                 {
                     DrawId = draw.Id,
                     Date = currentDate,
@@ -89,10 +89,10 @@ namespace TennisSim.Services
 
                 for (int i = 0; i < matchesForThisDay; i++)
                 {
-                    var courtIndex = i % courts.Names.Count;
-                    var slotIndex = i / courts.Names.Count;
-                    var match = matches[matchIndex++];
-                    var startTime = currentDate.Date.AddHours(11).AddMinutes(120 * slotIndex);
+                    int courtIndex = i % courts.Names.Count;
+                    int slotIndex = i / courts.Names.Count;
+                    DrawMatch match = matches[matchIndex++];
+                    DateTime startTime = currentDate.Date.AddHours(11).AddMinutes(120 * slotIndex);
 
                     Console.WriteLine($"[ScheduleGenerator] Scheduling MatchId={match.Id} on {courts.Names[courtIndex]} at {startTime}");
 
@@ -131,7 +131,7 @@ namespace TennisSim.Services
 
         private (List<string> Names, int MatchesPerCourt) GetCourtConfiguration()
         {
-            var (courtCount, matchesPerCourt) = _tournament.Category switch
+            (int courtCount, int matchesPerCourt) = _tournament.Category switch
             {
                 TournamentCategory.GrandSlam => (7, 5),
                 TournamentCategory.Masters1000 => (6, 3),
@@ -139,7 +139,7 @@ namespace TennisSim.Services
                 _ => (3, 3)
             };
 
-            var courtNames = new List<string> { "Centre Court" };
+            List<string> courtNames = new List<string> { "Centre Court" };
             for (int i = 2; i <= courtCount; i++)
             {
                 courtNames.Add(i == 2 && _tournament.Category == TournamentCategory.GrandSlam ? "Court 1" : $"Court {i - 1}");

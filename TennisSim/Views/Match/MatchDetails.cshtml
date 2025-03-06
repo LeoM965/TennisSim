@@ -6,7 +6,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" type="text/css" href="~/css/MatchDetails.css"/>
+    <link rel="stylesheet" type="text/css" href="~/css/MatchDetails.css" />
     <title>@ViewData["Title"]</title>
 </head>
 <body>
@@ -76,7 +76,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var stat in Model.RoundStats ?? new Dictionary<string, int>())
+                        @foreach (KeyValuePair<string, int> stat in Model.RoundStats ?? new Dictionary<string, int>())
                         {
                             <tr>
                                 <td>@stat.Key</td>
@@ -103,7 +103,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var match in Model.HeadToHeadMatches ?? Enumerable.Empty<Match>())
+                        @foreach (Match match in Model.HeadToHeadMatches ?? Enumerable.Empty<Match>())
                         {
                             <tr>
                                 <td>@match.Date.ToString("MM/dd/yyyy")</td>
@@ -122,7 +122,7 @@
 
             <section class="match-section">
                 <h2 class="match-section-title">Point by Point Details</h2>
-                @foreach (var match in Model.HeadToHeadMatches ?? Enumerable.Empty<Match>())
+                @foreach (Match match in Model.HeadToHeadMatches ?? Enumerable.Empty<Match>())
                 {
                     <div class="game-box">
                         <div class="set-header">
@@ -200,7 +200,7 @@
         }
         else if (point.StartsWith("Game-"))
         {
-            var score = point.Substring("Game-".Length);
+            string score = point.Substring("Game-".Length);
             return ("player1", true);
         }
 
@@ -217,10 +217,10 @@
         if (string.IsNullOrEmpty(score) || string.IsNullOrEmpty(player1Name) || string.IsNullOrEmpty(player2Name))
             return;
 
-        var sets = score.Split(',');
-        for (var setIndex = 0; setIndex < sets.Length; setIndex++)
+        string[] sets = score.Split(',');
+        for (int setIndex = 0; setIndex < sets.Length; setIndex++)
         {
-            var setScoreParts = sets[setIndex].Split('[', 2);
+            string[] setScoreParts = sets[setIndex].Split('[', 2);
             if (setScoreParts.Length <= 1) continue;
 
             int player1SetGames = 0;
@@ -233,10 +233,10 @@
                 </div>
                 <div class="set-details">
                     @{
-                        var pointSets = setScoreParts[1].TrimEnd(']').Split('|');
-                        for (var gameIndex = 0; gameIndex < pointSets.Length; gameIndex++)
+                        string[] pointSets = setScoreParts[1].TrimEnd(']').Split('|');
+                        for (int gameIndex = 0; gameIndex < pointSets.Length; gameIndex++)
                         {
-                            var points = pointSets[gameIndex].Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                            string[] points = pointSets[gameIndex].Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
                             if (!points.Any()) continue;
 
                             string? gameWinner = null;
@@ -244,10 +244,10 @@
 
                             <div class="game-number">Game @(gameIndex + 1)</div>
                             <div class="point-sequence">
-                                @foreach (var point in points)
+                                @foreach (string point in points)
                                 {
                                     <span class="point">@FormatPoint(point)</span>
-                                    var (winner, isDecidingPoint) = AnalyzePoint(point);
+                                    (string winner, bool isDecidingPoint) = AnalyzePoint(point);
 
                                     if (isDecidingPoint)
                                     {

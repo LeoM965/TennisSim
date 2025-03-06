@@ -30,19 +30,19 @@ namespace TennisSim.Controllers
 
         public IActionResult Index()
         {
-            var tournaments = _tournamentService.GetAllTournaments();
+            List<Tournament> tournaments = _tournamentService.GetAllTournaments();
             return View(tournaments);
         }
 
         public ActionResult Details(int id)
         {
-            var tournament = _tournamentService.GetTournamentById(id);
+            Tournament tournament = _tournamentService.GetTournamentById(id);
             if (tournament == null)
                 return NotFound();
 
-            var pointDistributions = _tournamentService.GetPointDistributions(tournament.Category);
+            List<PointDistribution> pointDistributions = _tournamentService.GetPointDistributions(tournament.Category);
 
-            var tournamentModel = new Tournament
+            Tournament tournamentModel = new Tournament
             {
                 Id = tournament.Id,
                 Name = tournament.Name,
@@ -62,7 +62,7 @@ namespace TennisSim.Controllers
 
         public ActionResult EntryList(int id)
         {
-            var tournament = _tournamentService.GetTournamentById(id);
+            Tournament tournament = _tournamentService.GetTournamentById(id);
             if (tournament == null)
                 return NotFound("Tournament not found");
 
@@ -73,7 +73,7 @@ namespace TennisSim.Controllers
             if (string.IsNullOrEmpty(username))
                 return RedirectToAction("EnterUsername", "GameStart");
 
-            var user = _context.UserNames.FirstOrDefault(u => u.Username == username);
+            UserName? user = _context.UserNames.FirstOrDefault(u => u.Username == username);
             if (user == null)
                 return NotFound("User not found");
 
@@ -87,11 +87,11 @@ namespace TennisSim.Controllers
 
             try
             {
-                var userEntryList = _entryListService.GetUserEntryList(user.Id, id);
+                UserEntryList userEntryList = _entryListService.GetUserEntryList(user.Id, id);
                 if (userEntryList == null)
                     return NotFound("Entry list not found");
 
-                var entryList = _context.EntryLists
+                List<EntryList> entryList = _context.EntryLists
                     .Where(el => el.UserEntryListId == userEntryList.Id)
                     .ToList();
 
@@ -111,7 +111,7 @@ namespace TennisSim.Controllers
         {
             try
             {
-                var tournament = _tournamentService.GetTournamentById(id);
+                Tournament tournament = _tournamentService.GetTournamentById(id);
                 if (tournament == null)
                     return NotFound("Tournament not found");
 
@@ -135,17 +135,17 @@ namespace TennisSim.Controllers
                     return NotFound($"User not found: {ex.Message}");
                 }
 
-                var requestedDate = date ?? user.CurrentDate;
+                DateTime requestedDate = date ?? user.CurrentDate;
 
                 if (requestedDate > user.CurrentDate)
                     return RedirectToAction("Schedule", new { id, username, date = user.CurrentDate });
 
-                var userEntryList = _entryListService.GetUserEntryList(user.Id, id);
+                UserEntryList userEntryList = _entryListService.GetUserEntryList(user.Id, id);
 
                 if (userEntryList == null || !userEntryList.HasViewedDraw)
                     return RedirectToAction("EntryList", new { id });
 
-                var draw = await _context.Draws
+                Draw? draw = await _context.Draws
                     .Include(d => d.DrawMatches)
                         .ThenInclude(m => m.Player1)
                     .Include(d => d.DrawMatches)
@@ -158,7 +158,7 @@ namespace TennisSim.Controllers
                 {
                     try
                     {
-                        var fullTournament = await _context.Tournaments
+                        Tournament? fullTournament = await _context.Tournaments
                             .Include(t => t.UserEntryLists)
                                 .ThenInclude(uel => uel.EntryList)
                             .FirstOrDefaultAsync(t => t.Id == id);
@@ -166,7 +166,7 @@ namespace TennisSim.Controllers
                         if (fullTournament == null)
                             return NotFound("Tournament data not found");
 
-                        var userEntryLists = fullTournament.UserEntryLists?
+                        UserEntryList? userEntryLists = fullTournament.UserEntryLists?
                             .FirstOrDefault(uel => uel.UserNameId == user.Id);
 
                         List<EntryList> entryList;
@@ -187,15 +187,15 @@ namespace TennisSim.Controllers
                         if (entryList.Count == 0)
                             return NotFound("No entry list available for this tournament");
 
-                        var playerNames = entryList.Select(e => e.PlayerName).ToList();
-                        var allPlayers = await _context.Players
+                        List<string> playerNames = entryList.Select(e => e.PlayerName).ToList();
+                        Dictionary<string, Player> allPlayers = await _context.Players
                             .Where(p => playerNames.Contains(p.Name))
                             .ToDictionaryAsync(p => p.Name, p => p);
 
-                        var missingPlayers = playerNames.Except(allPlayers.Keys).ToList();
+                        List<string> missingPlayers = playerNames.Except(allPlayers.Keys).ToList();
                         if (missingPlayers.Any())
                         {
-                            var missingPlayersMessage = string.Join(", ", missingPlayers);
+                            string missingPlayersMessage = string.Join(", ", missingPlayers);
                             return StatusCode(500, $"Missing players in database: {missingPlayersMessage}");
                         }
 
@@ -212,13 +212,13 @@ namespace TennisSim.Controllers
 
                 var schedules = _tournamentService.GetTournamentScheduleForDate(id, draw, requestedDate);
 
-                var availableDates = _tournamentService.GetAvailableDates(
+                List<DateTime> availableDates = _tournamentService.GetAvailableDates(
                     id,
                     tournament.StartDate,
                     user.CurrentDate
                 );
 
-                var viewModel = new TournamentScheduleViewModel
+                TournamentScheduleViewModel viewModel = new TournamentScheduleViewModel
                 {
                     TournamentName = tournament.Name,
                     TournamentId = id,

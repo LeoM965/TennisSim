@@ -22,11 +22,11 @@ namespace TennisSim.Controllers
             if (!IsUserAuthenticated(out string username))
                 return RedirectToAction("EnterUsername", "GameStart");
 
-            var user = _context.UserNames.FirstOrDefault(u => u.Username == username);
+            UserName? user = _context.UserNames.FirstOrDefault(u => u.Username == username);
             if (user == null)
                 return RedirectToAction("EnterUsername", "GameStart");
 
-            var draws = _context.Draws
+            List<Draw> draws = _context.Draws
                 .Include(d => d.Tournament)
                 .Where(d => d.Tournament != null && d.UserId == user.Id)
                 .OrderByDescending(d => d.Tournament.StartDate)
@@ -40,11 +40,11 @@ namespace TennisSim.Controllers
             if (!IsUserAuthenticated(out string username))
                 return RedirectToAction("EnterUsername", "GameStart");
 
-            var user = _context.UserNames.FirstOrDefault(u => u.Username == username);
+            UserName? user = _context.UserNames.FirstOrDefault(u => u.Username == username);
             if (user == null)
                 return NotFound("User not found");
 
-            var draw = _context.Draws
+            Draw? draw = _context.Draws
                 .Include(d => d.Tournament)
                 .Include(d => d.DrawMatches.OrderBy(m => m.Round).ThenBy(m => m.MatchNumber))
                     .ThenInclude(m => m.Player1)
@@ -72,11 +72,11 @@ namespace TennisSim.Controllers
             if (!IsUserAuthenticated(out string username))
                 return RedirectToAction("EnterUsername", "GameStart");
 
-            var user = _context.UserNames.FirstOrDefault(u => u.Username == username);
+            UserName? user = _context.UserNames.FirstOrDefault(u => u.Username == username);
             if (user == null)
                 return NotFound("User not found");
 
-            var tournament = _context.Tournaments
+            Tournament? tournament = _context.Tournaments
                 .Include(t => t.UserEntryLists)
                     .ThenInclude(uel => uel.EntryList)
                 .FirstOrDefault(t => t.Id == tournamentId);
@@ -91,7 +91,7 @@ namespace TennisSim.Controllers
                 return View("Draw");
             }
 
-            var existingDraw = _context.Draws
+            Draw? existingDraw = _context.Draws
                 .Include(d => d.DrawMatches)
                     .ThenInclude(m => m.Player1)
                 .Include(d => d.DrawMatches)
@@ -107,7 +107,7 @@ namespace TennisSim.Controllers
 
             try
             {
-                var userEntryList = tournament.UserEntryLists?
+                UserEntryList? userEntryList = tournament.UserEntryLists?
                     .FirstOrDefault(uel => uel.UserNameId == user.Id);
 
                 List<EntryList> entryList;
@@ -128,26 +128,26 @@ namespace TennisSim.Controllers
                     return RedirectToAction("Details", "Tournament", new { id = tournamentId });
                 }
 
-                var playerNames = entryList.Select(e => e.PlayerName).ToList();
+                List<string> playerNames = entryList.Select(e => e.PlayerName).ToList();
                 if (playerNames.Count != playerNames.Distinct().Count())
                 {
                     TempData["ErrorMessage"] = "Entry list contains duplicate players. Please fix the entry list first.";
                     return RedirectToAction("Details", "Tournament", new { id = tournamentId });
                 }
 
-                var allPlayers = _context.Players
+                Dictionary<string, Player> allPlayers = _context.Players
                     .Where(p => playerNames.Contains(p.Name))
                     .ToDictionary(p => p.Name, p => p);
 
-                var missingPlayers = playerNames.Except(allPlayers.Keys).ToList();
+                List<string> missingPlayers = playerNames.Except(allPlayers.Keys).ToList();
                 if (missingPlayers.Any())
                 {
-                    var missingPlayersMessage = string.Join(", ", missingPlayers);
+                    string missingPlayersMessage = string.Join(", ", missingPlayers);
                     TempData["ErrorMessage"] = $"The following players were not found in the database: {missingPlayersMessage}";
                     return RedirectToAction("Details", "Tournament", new { id = tournamentId });
                 }
 
-                var draw = _drawService.CreateNewDraw(tournament, entryList, user.Id);
+                Draw draw = _drawService.CreateNewDraw(tournament, entryList, user.Id);
                 return RedirectToAction("Draw", new { id = draw.Id });
             }
             catch (Exception ex)

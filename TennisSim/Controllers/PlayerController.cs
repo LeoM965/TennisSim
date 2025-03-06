@@ -3,10 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using TennisSim.Data;
 using TennisSim.Models;
 using TennisSim.Services;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
-
 public class PlayerController : Controller
 {
     private readonly ApplicationDbContext _context;
@@ -27,7 +23,7 @@ public class PlayerController : Controller
         if (string.IsNullOrEmpty(username))
             return RedirectToAction("EnterUsername", "GameStart");
 
-        var user = await _context.UserNames
+        UserName? user = await _context.UserNames
             .AsNoTracking()
             .FirstOrDefaultAsync(u => u.Username == username);
 
@@ -36,24 +32,24 @@ public class PlayerController : Controller
 
         await _rankingService.UpdateRankingsAsync(user.CurrentDate, user.Id);
 
-        var userRankings = await _context.Rankings
+        List<Ranking> userRankings = await _context.Rankings
             .Where(r => r.UserId == user.Id)
             .ToListAsync();
 
-        var latestRankingDate = userRankings
+        DateTime latestRankingDate = userRankings
             .OrderByDescending(r => r.Date)
             .Select(r => r.Date)
             .FirstOrDefault();
 
-        var players = await _context.Players
+        List<Player> players = await _context.Players
             .AsNoTracking()
             .Include(p => p.Nationality)
             .Include(p => p.Rankings.Where(r => r.UserId == user.Id))
             .ToListAsync();
 
-        foreach (var player in players)
+        foreach (Player player in players)
         {
-            var ranking = userRankings
+            Ranking? ranking = userRankings
                 .Where(r => r.PlayerId == player.Id && r.Date == latestRankingDate)
                 .FirstOrDefault();
 
@@ -63,7 +59,7 @@ public class PlayerController : Controller
             }
         }
 
-        var sortedPlayers = players.OrderBy(p => p.Ranking == 0 ? int.MaxValue : p.Ranking).ToList();
+        List<Player> sortedPlayers = players.OrderBy(p => p.Ranking == 0 ? int.MaxValue : p.Ranking).ToList();
 
         ViewData["CurrentDate"] = user.CurrentDate.ToString("d MMMM yyyy");
 
@@ -79,7 +75,7 @@ public class PlayerController : Controller
         if (string.IsNullOrEmpty(username))
             return RedirectToAction("EnterUsername", "GameStart");
 
-        var user = await _context.UserNames
+        UserName? user = await _context.UserNames
             .FirstOrDefaultAsync(u => u.Username == username);
 
         if (user == null)
@@ -87,7 +83,7 @@ public class PlayerController : Controller
 
         await _rankingService.UpdateRankingsAsync(user.CurrentDate, user.Id);
 
-        var player = await _context.Players
+        Player? player = await _context.Players
             .Include(p => p.Nationality)
             .Include(p => p.Attributes)
             .Include(p => p.Rankings.Where(r => r.UserId == user.Id))
@@ -96,14 +92,14 @@ public class PlayerController : Controller
         if (player == null)
             return NotFound();
 
-        var userDrawIds = await _context.Draws
+        List<int> userDrawIds = await _context.Draws
             .Where(d => d.UserId == user.Id)
             .Select(d => d.Id)
             .ToListAsync();
 
-        var currentDateOnly = user.CurrentDate.Date;
+        DateTime currentDateOnly = user.CurrentDate.Date;
 
-        var matches = await _context.Matches
+        List<Match> matches = await _context.Matches
             .Include(m => m.Draw)
                 .ThenInclude(d => d.Tournament)
             .Include(m => m.Player1)
@@ -116,25 +112,25 @@ public class PlayerController : Controller
             .OrderByDescending(m => m.Date)
             .ToListAsync();
 
-        var playerIds = matches.SelectMany(m => new[] { m.Player1Id, m.Player2Id })
+        List<int> playerIds = matches.SelectMany(m => new[] { m.Player1Id, m.Player2Id })
             .Distinct()
             .ToList();
 
-        var rankingsForPlayers = await _context.Rankings
+        List<Ranking> rankingsForPlayers = await _context.Rankings
             .Where(r => playerIds.Contains(r.PlayerId) && r.UserId == user.Id)
             .ToListAsync();
 
-        foreach (var match in matches)
+        foreach (Match match in matches)
         {
             if (match.Player1 != null)
             {
-                var player1Rankings = rankingsForPlayers
+                List<Ranking> player1Rankings = rankingsForPlayers
                     .Where(r => r.PlayerId == match.Player1Id)
                     .ToList();
 
                 match.Player1.Rankings = player1Rankings;
 
-                var player1Ranking = player1Rankings
+                Ranking? player1Ranking = player1Rankings
                     .Where(r => r.Date.Date <= match.Date.Date)
                     .OrderByDescending(r => r.Date)
                     .FirstOrDefault();
@@ -147,13 +143,13 @@ public class PlayerController : Controller
 
             if (match.Player2 != null)
             {
-                var player2Rankings = rankingsForPlayers
+                List<Ranking> player2Rankings = rankingsForPlayers
                     .Where(r => r.PlayerId == match.Player2Id)
                     .ToList();
 
                 match.Player2.Rankings = player2Rankings;
 
-                var player2Ranking = player2Rankings
+                Ranking? player2Ranking = player2Rankings
                     .Where(r => r.Date.Date <= match.Date.Date)
                     .OrderByDescending(r => r.Date)
                     .FirstOrDefault();
@@ -165,11 +161,11 @@ public class PlayerController : Controller
             }
         }
 
-        var totalMatches = matches.Count;
-        var totalWins = matches.Count(m => m.WinnerId == id);
-        var winPercentage = totalMatches > 0 ? (double)totalWins / totalMatches * 100 : 0;
+        int totalMatches = matches.Count;
+        int totalWins = matches.Count(m => m.WinnerId == id);
+        double winPercentage = totalMatches > 0 ? (double)totalWins / totalMatches * 100 : 0;
 
-        var viewModel = new PlayerDetailsViewModel
+        PlayerDetailsViewModel viewModel = new PlayerDetailsViewModel
         {
             Player = player,
             RecentMatches = matches,

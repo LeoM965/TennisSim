@@ -18,8 +18,8 @@ public class GameController : Controller
     [HttpGet]
     public IActionResult Start(string username)
     {
-        var user = _userService.GetUserByUsername(username);
-        var model = new GameStartViewModel
+        UserName user = _userService.GetUserByUsername(username);
+        GameStartViewModel model = new GameStartViewModel
         {
             Username = user.Username,
             CurrentDate = user.CurrentDate
@@ -36,7 +36,7 @@ public class GameController : Controller
     [HttpPost]
     public IActionResult Load(string username)
     {
-        var user = _userService.GetUserByUsername(username);
+        UserName user = _userService.GetUserByUsername(username);
 
         if (user == null)
         {
@@ -52,7 +52,7 @@ public class GameController : Controller
     [HttpPost]
     public async Task<IActionResult> IncrementDay(string userId)
     {
-        var user = await _context.UserNames
+        UserName? user = await _context.UserNames
             .FirstOrDefaultAsync(u => u.Username == userId);
 
         if (user == null)
@@ -60,14 +60,14 @@ public class GameController : Controller
             return Json(new { success = false, message = "User not found." });
         }
 
-        var upcomingTournaments = await _context.Tournaments
+        List<Tournament> upcomingTournaments = await _context.Tournaments
             .Where(t => t.StartDate.Date > user.CurrentDate.Date &&
                        t.StartDate.Date <= user.CurrentDate.AddDays(2).Date)
             .ToListAsync();
 
-        foreach (var tournament in upcomingTournaments)
+        foreach (Tournament tournament in upcomingTournaments)
         {
-            var userEntryList = await _context.UserEntryLists
+            UserEntryList? userEntryList = await _context.UserEntryLists
                 .FirstOrDefaultAsync(uel => uel.UserNameId == user.Id &&
                                      uel.TournamentId == tournament.Id);
 
@@ -81,14 +81,14 @@ public class GameController : Controller
             }
         }
 
-        var activeTournaments = await _context.Tournaments
+        List<Tournament> activeTournaments = await _context.Tournaments
             .Where(t => t.StartDate.Date <= user.CurrentDate.Date &&
                        t.EndDate.Date >= user.CurrentDate.Date)
             .ToListAsync();
 
-        foreach (var tournament in activeTournaments)
+        foreach (Tournament tournament in activeTournaments)
         {
-            var userDraw = await _context.Draws
+            Draw? userDraw = await _context.Draws
                 .FirstOrDefaultAsync(d => d.TournamentId == tournament.Id && d.UserId == user.Id);
 
             if (userDraw == null)
@@ -100,7 +100,7 @@ public class GameController : Controller
                 });
             }
 
-            var hasUserSchedule = await _context.Schedules
+            bool hasUserSchedule = await _context.Schedules
                 .AnyAsync(s => s.Date.Date == user.CurrentDate.Date &&
                               s.DrawId == userDraw.Id);
 
@@ -114,7 +114,7 @@ public class GameController : Controller
             }
         }
 
-        var currentUserSchedules = await _context.Schedules
+        List<Schedule> currentUserSchedules = await _context.Schedules
             .Include(s => s.ScheduledMatches)
             .Include(s => s.Draw)
                 .ThenInclude(d => d.Tournament)
@@ -131,12 +131,12 @@ public class GameController : Controller
 
         if (unplayedMatches.Any())
         {
-            var tournamentGroups = unplayedMatches
+            List<string> tournamentGroups = unplayedMatches
                 .GroupBy(m => m.Schedule.Draw.Tournament.Name)
                 .Select(g => $"{g.Key}: {g.Count()} matches")
                 .ToList();
 
-            var matchDetails = string.Join(", ", tournamentGroups);
+            string matchDetails = string.Join(", ", tournamentGroups);
             return Json(new
             {
                 success = false,

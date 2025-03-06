@@ -10,13 +10,11 @@ namespace TennisSim.Controllers
     public class MatchController : Controller
     {
         private readonly IMatchService _matchService;
-        private readonly ILogger<MatchController> _logger;
         private readonly ApplicationDbContext _context;
 
-        public MatchController(IMatchService matchService, ILogger<MatchController> logger, ApplicationDbContext context)
+        public MatchController(IMatchService matchService, ApplicationDbContext context)
         {
             _matchService = matchService;
-            _logger = logger;
             _context = context;
         }
 
@@ -104,7 +102,6 @@ namespace TennisSim.Controllers
         {
             if (matchId <= 0)
             {
-                _logger.LogWarning("Invalid matchId: {MatchId}", matchId);
                 return BadRequest(new
                 {
                     error = "Invalid match ID",
@@ -117,8 +114,7 @@ namespace TennisSim.Controllers
                 var result = await _matchService.SimulateMatch(matchId);
 
                 if (result == null)
-                {
-                    _logger.LogError("Simulation returned null for match {MatchId}", matchId);
+                { 
                     return StatusCode(500, new
                     {
                         error = "Match simulation failed",
@@ -159,7 +155,7 @@ namespace TennisSim.Controllers
             }
             catch (ArgumentException ex)
             {
-                _logger.LogWarning(ex, "Invalid argument for match {MatchId}", matchId);
+                
                 return BadRequest(new
                 {
                     error = "Invalid match data",
@@ -168,7 +164,6 @@ namespace TennisSim.Controllers
             }
             catch (InvalidOperationException ex)
             {
-                _logger.LogError(ex, "Operation error for match {MatchId}", matchId);
                 return StatusCode(500, new
                 {
                     error = "Match simulation failed",
@@ -177,7 +172,6 @@ namespace TennisSim.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unexpected error simulating match {MatchId}", matchId);
                 return StatusCode(500, new
                 {
                     error = "Internal server error",
