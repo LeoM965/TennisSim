@@ -52,6 +52,12 @@ namespace TennisSim.Services
 
         public async Task UpdateRankingsAsync(DateTime targetDate, int userId)
         {
+            if (!await _context.Rankings.AnyAsync(r => r.UserId == userId))
+            {
+                await CreateInitialRankingsAsync(targetDate, userId);
+                return;
+            }
+
             if (targetDate.DayOfWeek != DayOfWeek.Monday) return;
 
             DateTime thisMonday = targetDate.Date;
@@ -77,38 +83,98 @@ namespace TennisSim.Services
 
             List<Ranking> newRankings = new List<Ranking>();
 
-            bool isFirstWeek = !await _context.Rankings.AnyAsync(r => r.UserId == userId);
+            DateTime latestPreviousDate = await _context.Rankings
+                .Where(r => r.UserId == userId && r.Date < thisMonday)
+                .MaxAsync(r => r.Date);
 
-            if (isFirstWeek)
+            List<Ranking> previousRankings = await _context.Rankings
+                .Where(r => r.UserId == userId && r.Date == latestPreviousDate)
+                .ToListAsync();
+
+            List<int> rankedPlayerIds = previousRankings.Select(r => r.PlayerId).ToList();
+            List<int> allPlayers = await _context.Players.Select(p => p.Id).ToListAsync();
+            List<int> unrankedPlayerIds = allPlayers.Except(rankedPlayerIds).ToList();
+
+            foreach (int playerId in unrankedPlayerIds)
             {
-                DateTime latestSystemDate = await _context.Rankings
+                previousRankings.Add(new Ranking
+                {
+                    PlayerId = playerId,
+                    Points = 0,
+                    Date = latestPreviousDate,
+                    UserId = userId,
+                    Rank = 0
+                });
+            }
+
+            Dictionary<int, List<Match>> tournaments = lastWeekMatches
+                .GroupBy(m => m.Draw.TournamentId)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            foreach (Ranking prevRank in previousRankings)
+            {
+                int decayedPoints = (int)Math.Round(prevRank.Points * (1 - DecayPercentage));
+                int maxTournamentPoints = 0;
+                foreach (KeyValuePair<int, List<Match>> tournament in tournaments)
+                {
+                    int tournamentPoints = CalculateTournamentPoints(
+                        tournament.Value,
+                        prevRank.PlayerId,
+                        pointDistributions
+                    );
+                    maxTournamentPoints = Math.Max(maxTournamentPoints, tournamentPoints);
+                }
+                newRankings.Add(new Ranking
+                {
+                    PlayerId = prevRank.PlayerId,
+                    Points = decayedPoints + maxTournamentPoints,
+                    Date = thisMonday,
+                    UserId = userId
+                });
+            }
+
+            List<Ranking> sortedRankings = newRankings
+                .OrderByDescending(r => r.Points)
+                .ToList();
+
+            for (int i = 0; i < sortedRankings.Count; i++)
+            {
+                sortedRankings[i].Rank = i + 1;
+            }
+
+            await _context.Rankings.AddRangeAsync(sortedRankings);
+            await _context.SaveChangesAsync();
+        }
+
+        private async Task CreateInitialRankingsAsync(DateTime targetDate, int userId)
+        {
+            DateTime rankingDate = targetDate.Date;
+            while (rankingDate.DayOfWeek != DayOfWeek.Monday)
+            {
+                rankingDate = rankingDate.AddDays(1);
+            }
+
+            if (await _context.Rankings.AnyAsync(r => r.Date == rankingDate && r.UserId == userId))
+                return;
+
+            List<Ranking> newRankings = new List<Ranking>();
+            DateTime latestSystemDate = DateTime.MinValue;
+
+            try
+            {
+                latestSystemDate = await _context.Rankings
                     .Where(r => r.UserId == 0)
                     .MaxAsync(r => r.Date);
+            }
+            catch { }
 
+            if (latestSystemDate != DateTime.MinValue)
+            {
                 List<Ranking> systemRankings = await _context.Rankings
                     .Where(r => r.UserId == 0 && r.Date == latestSystemDate)
                     .ToListAsync();
 
-
-                if (systemRankings.Count == 0)
-                {
-                    List<Player> allPlayers = await _context.Players.ToListAsync();
-
-                    foreach (Player player in allPlayers)
-                    {
-                        int initialPoints = 1000;
-
-                        newRankings.Add(new Ranking
-                        {
-                            PlayerId = player.Id,
-                            Points = initialPoints,
-                            Date = thisMonday,
-                            UserId = userId,
-                            Rank = 0
-                        });
-                    }
-                }
-                else
+                if (systemRankings.Count > 0)
                 {
                     foreach (Ranking systemRank in systemRankings)
                     {
@@ -116,7 +182,7 @@ namespace TennisSim.Services
                         {
                             PlayerId = systemRank.PlayerId,
                             Points = systemRank.Points,
-                            Date = thisMonday,
+                            Date = rankingDate,
                             UserId = userId,
                             Rank = systemRank.Rank
                         });
@@ -132,64 +198,20 @@ namespace TennisSim.Services
                         {
                             PlayerId = playerId,
                             Points = 0,
-                            Date = thisMonday,
+                            Date = rankingDate,
                             UserId = userId,
                             Rank = 0
                         });
                     }
                 }
+                else
+                {
+                    await CreateDefaultRankingsAsync(rankingDate, userId, newRankings);
+                }
             }
             else
             {
-                DateTime latestPreviousDate = await _context.Rankings
-                    .Where(r => r.UserId == userId && r.Date < thisMonday)
-                    .MaxAsync(r => r.Date);
-
-                List<Ranking> previousRankings = await _context.Rankings
-                    .Where(r => r.UserId == userId && r.Date == latestPreviousDate)
-                    .ToListAsync();
-
-                List<int> rankedPlayerIds = previousRankings.Select(r => r.PlayerId).ToList();
-                List<int> allPlayers = await _context.Players.Select(p => p.Id).ToListAsync();
-                List<int> unrankedPlayerIds = allPlayers.Except(rankedPlayerIds).ToList();
-
-                foreach (int playerId in unrankedPlayerIds)
-                {
-                    previousRankings.Add(new Ranking
-                    {
-                        PlayerId = playerId,
-                        Points = 0,
-                        Date = latestPreviousDate,
-                        UserId = userId,
-                        Rank = 0
-                    });
-                }
-
-                Dictionary<int, List<Match>> tournaments = lastWeekMatches
-                    .GroupBy(m => m.Draw.TournamentId)
-                    .ToDictionary(g => g.Key, g => g.ToList());
-
-                foreach (Ranking prevRank in previousRankings)
-                {
-                    int decayedPoints = (int)Math.Round(prevRank.Points * (1 - DecayPercentage));
-                    int maxTournamentPoints = 0;
-                    foreach (KeyValuePair<int, List<Match>> tournament in tournaments)
-                    {
-                        int tournamentPoints = CalculateTournamentPoints(
-                            tournament.Value,
-                            prevRank.PlayerId,
-                            pointDistributions
-                        );
-                        maxTournamentPoints = Math.Max(maxTournamentPoints, tournamentPoints);
-                    }
-                    newRankings.Add(new Ranking
-                    {
-                        PlayerId = prevRank.PlayerId,
-                        Points = decayedPoints + maxTournamentPoints,
-                        Date = thisMonday,
-                        UserId = userId
-                    });
-                }
+                await CreateDefaultRankingsAsync(rankingDate, userId, newRankings);
             }
 
             List<Ranking> sortedRankings = newRankings
@@ -203,6 +225,39 @@ namespace TennisSim.Services
 
             await _context.Rankings.AddRangeAsync(sortedRankings);
             await _context.SaveChangesAsync();
+
+            if (targetDate < rankingDate)
+            {
+                foreach (var ranking in sortedRankings)
+                {
+                    _context.Rankings.Add(new Ranking
+                    {
+                        PlayerId = ranking.PlayerId,
+                        Points = ranking.Points,
+                        Date = targetDate,
+                        UserId = userId,
+                        Rank = ranking.Rank
+                    });
+                }
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        private async Task CreateDefaultRankingsAsync(DateTime rankingDate, int userId, List<Ranking> newRankings)
+        {
+            List<Player> allPlayers = await _context.Players.ToListAsync();
+
+            foreach (Player player in allPlayers)
+            {
+                newRankings.Add(new Ranking
+                {
+                    PlayerId = player.Id,
+                    Points = 1000,
+                    Date = rankingDate,
+                    UserId = userId,
+                    Rank = 0
+                });
+            }
         }
     }
 }
