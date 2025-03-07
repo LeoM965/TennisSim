@@ -22,7 +22,7 @@ namespace TennisSim.Services
 
         public Tournament GetTournamentById(int id)
         {
-            var tournament = _context.Tournaments
+            Tournament? tournament = _context.Tournaments
                 .Include(t => t.PointDistributions)
                 .FirstOrDefault(t => t.Id == id);
 
@@ -43,20 +43,19 @@ namespace TennisSim.Services
 
         public List<Schedule> GenerateTournamentSchedule(int tournamentId, Draw draw)
         {
-            var tournament = _context.Tournaments
+            Tournament? tournament = _context.Tournaments
                 .FirstOrDefault(t => t.Id == tournamentId);
 
             if (tournament == null) return new List<Schedule>();
 
-            // Get existing schedules for this draw
-            var existingSchedules = _context.Schedules
+            List<Schedule> existingSchedules = _context.Schedules
                 .Where(s => s.DrawId == draw.Id)
                 .ToList();
 
-            var scheduleGenerator = new ScheduleGenerator(tournament);
-            var schedules = scheduleGenerator.GenerateSchedule(draw);
+            ScheduleGenerator scheduleGenerator = new ScheduleGenerator(tournament);
+            List<Schedule> schedules = scheduleGenerator.GenerateSchedule(draw);
 
-            foreach (var schedule in schedules)
+            foreach (Schedule schedule in schedules)
             {
                 if (!existingSchedules.Any(s => s.Date == schedule.Date))
                 {
@@ -70,8 +69,7 @@ namespace TennisSim.Services
 
         public async Task<bool> HasUnplayedMatches(int tournamentId)
         {
-            // Get all draws for this tournament
-            var drawIds = await _context.Draws
+            List<int> drawIds = await _context.Draws
                 .Where(d => d.TournamentId == tournamentId)
                 .Select(d => d.Id)
                 .ToListAsync();
@@ -84,13 +82,12 @@ namespace TennisSim.Services
 
         public async Task<ScheduleMatch> GetNextUnplayedMatch(int tournamentId)
         {
-            // Get all draws for this tournament
-            var drawIds = await _context.Draws
+            List<int> drawIds = await _context.Draws
                 .Where(d => d.TournamentId == tournamentId)
                 .Select(d => d.Id)
                 .ToListAsync();
 
-            var match = await _context.Schedules
+            ScheduleMatch? match = await _context.Schedules
                 .Where(s => drawIds.Contains(s.DrawId))
                 .SelectMany(s => s.ScheduledMatches)
                 .Include(m => m.DrawMatch)
@@ -111,8 +108,8 @@ namespace TennisSim.Services
 
         public List<DateTime> GetAvailableDates(int tournamentId, DateTime startDate, DateTime currentDate)
         {
-            var dates = new List<DateTime>();
-            var date = startDate.Date;
+            List<DateTime> dates = new List<DateTime>();
+            DateTime date = startDate.Date;
 
             while (date <= currentDate.Date)
             {
@@ -125,14 +122,13 @@ namespace TennisSim.Services
 
         public List<Schedule> GetTournamentScheduleForDate(int tournamentId, Draw draw, DateTime requestedDate)
         {
-            var tournament = _context.Tournaments
+            Tournament? tournament = _context.Tournaments
                 .FirstOrDefault(t => t.Id == tournamentId);
 
             if (tournament == null)
                 return new List<Schedule>();
 
-            // Get existing schedules for this draw on the requested date
-            var existingSchedule = _context.Schedules
+            List<Schedule> existingSchedule = _context.Schedules
                 .Where(s => s.DrawId == draw.Id && s.Date.Date == requestedDate.Date)
                 .Include(s => s.ScheduledMatches)
                     .ThenInclude(m => m.DrawMatch)
@@ -148,14 +144,14 @@ namespace TennisSim.Services
             if (existingSchedule.Count > 0)
                 return existingSchedule;
 
-            var scheduleGenerator = new ScheduleGenerator(tournament);
-            var allSchedules = scheduleGenerator.GenerateSchedule(draw);
+            ScheduleGenerator scheduleGenerator = new ScheduleGenerator(tournament);
+            List<Schedule> allSchedules = scheduleGenerator.GenerateSchedule(draw);
 
-            var requestedDateSchedule = allSchedules
+            List<Schedule> requestedDateSchedule = allSchedules
                 .Where(s => s.Date.Date == requestedDate.Date)
                 .ToList();
 
-            foreach (var schedule in requestedDateSchedule)
+            foreach (Schedule schedule in requestedDateSchedule)
             {
                 _context.Schedules.Add(schedule);
             }

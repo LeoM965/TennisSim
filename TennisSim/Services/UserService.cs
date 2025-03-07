@@ -22,7 +22,7 @@ namespace TennisSim.Services
 
                 username = username.Trim();
 
-                var user = _context.UserNames
+                UserName? user = _context.UserNames
                     .FirstOrDefault(u => u.Username.ToLower() == username.ToLower())
                     ?? throw new KeyNotFoundException($"User '{username}' not found");
 
@@ -44,7 +44,7 @@ namespace TennisSim.Services
             if (user == null)
                 throw new ArgumentNullException(nameof(user), "User cannot be null");
 
-            var existingUser = _context.UserNames.Find(user.Id);
+            UserName? existingUser = _context.UserNames.Find(user.Id);
             if (existingUser == null)
                 throw new KeyNotFoundException($"User with ID {user.Id} not found");
 
@@ -54,20 +54,20 @@ namespace TennisSim.Services
 
         public bool HasUpcomingTournament(int userId)
         {
-            var user = GetUserById(userId);
+            UserName? user = GetUserById(userId);
             if (user == null) return false;
 
-            var targetDate = user.CurrentDate.AddDays(2);
+            DateTime targetDate = user.CurrentDate.AddDays(2);
             return _context.Tournaments
                 .Any(t => t.StartDate.Date == targetDate.Date);
         }
         public bool HasViewedEntryList(int userId)
         {
-            var user = GetUserById(userId);
+            UserName? user = GetUserById(userId);
             if (user == null) return false;
 
-            var targetDate = user.CurrentDate.AddDays(2);
-            var upcomingTournament = _context.Tournaments
+            DateTime targetDate = user.CurrentDate.AddDays(2);
+            Tournament? upcomingTournament = _context.Tournaments
                 .FirstOrDefault(t => t.StartDate.Date == targetDate.Date);
 
             if (upcomingTournament == null) return false;
@@ -79,11 +79,11 @@ namespace TennisSim.Services
 
         public bool HasViewedDraw(int userId)
         {
-            var user = GetUserById(userId);
+            UserName? user = GetUserById(userId);
             if (user == null) return false;
 
-            var targetDate = user.CurrentDate.AddDays(2);
-            var upcomingTournament = _context.Tournaments
+            DateTime targetDate = user.CurrentDate.AddDays(2);
+            Tournament? upcomingTournament = _context.Tournaments
                 .FirstOrDefault(t => t.StartDate.Date == targetDate.Date);
 
             if (upcomingTournament == null) return false;

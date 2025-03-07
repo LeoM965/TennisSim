@@ -16,15 +16,15 @@ public class EntryListService : IEntryListService
 
     public UserEntryList GetUserEntryList(int userId, int tournamentId)
     {
-        var user = _context.UserNames.FirstOrDefault(u => u.Id == userId);
+        UserName? user = _context.UserNames.FirstOrDefault(u => u.Id == userId);
         if (user == null)
             throw new InvalidOperationException($"User with ID {userId} not found.");
 
-        var tournament = _context.Tournaments.FirstOrDefault(t => t.Id == tournamentId);
+        Tournament? tournament = _context.Tournaments.FirstOrDefault(t => t.Id == tournamentId);
         if (tournament == null)
             throw new InvalidOperationException($"Tournament with ID {tournamentId} not found.");
 
-        var entryList = _context.UserEntryLists
+        UserEntryList? entryList = _context.UserEntryLists
             .Include(uel => uel.EntryList)
             .FirstOrDefault(uel => uel.UserNameId == userId &&
                                   uel.TournamentId == tournamentId);
@@ -57,16 +57,16 @@ public class EntryListService : IEntryListService
 
     public List<EntryList> GenerateEntryList(int tournamentId, int userId)
     {
-        var tournament = _context.Tournaments.Find(tournamentId);
-        var user = _context.UserNames.Find(userId);
+        Tournament? tournament = _context.Tournaments.Find(tournamentId);
+        UserName? user = _context.UserNames.Find(userId);
 
         if (tournament == null || user == null)
             return new List<EntryList>();
 
-        var tournamentWeekStart = tournament.StartDate.Date.AddDays(-(int)tournament.StartDate.DayOfWeek);
-        var tournamentWeekEnd = tournamentWeekStart.AddDays(6);
+        DateTime tournamentWeekStart = tournament.StartDate.Date.AddDays(-(int)tournament.StartDate.DayOfWeek);
+        DateTime tournamentWeekEnd = tournamentWeekStart.AddDays(6);
 
-        var playersInOtherTournaments = _context.UserEntryLists
+        List<string> playersInOtherTournaments = _context.UserEntryLists
             .Where(uel => uel.UserNameId == userId)
             .Where(uel => uel.Tournament.StartDate >= tournamentWeekStart &&
                          uel.Tournament.StartDate <= tournamentWeekEnd)
@@ -113,7 +113,7 @@ public class EntryListService : IEntryListService
             .Take(maxEntries)
             .ToList();
 
-        var userEntryList = new UserEntryList
+        UserEntryList userEntryList = new UserEntryList
         {
             UserNameId = userId,
             TournamentId = tournamentId,
@@ -125,7 +125,7 @@ public class EntryListService : IEntryListService
         _context.UserEntryLists.Add(userEntryList);
         _context.SaveChanges();
 
-        var entryList = eligiblePlayers.Select(p => new EntryList
+        List<EntryList> entryList = eligiblePlayers.Select(p => new EntryList
         {
             PlayerName = p.Name,
             Rank = p.Rank,

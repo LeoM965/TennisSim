@@ -16,39 +16,41 @@ namespace TennisSim.Services
 
         public Draw CreateNewDraw(Tournament tournament, List<EntryList> entryList, int userId)
         {
-            var userExists = _context.UserNames.Any(u => u.Id == userId);
+            bool userExists = _context.UserNames.Any(u => u.Id == userId);
             if (!userExists)
             {
                 throw new InvalidOperationException($"User with ID {userId} does not exist.");
             }
 
-            var drawSize = DrawConstants.GetDrawSize(tournament.Category);
-            var byeCount = DrawConstants.GetByeCount(tournament.Category);
-            var seedCount = DrawConstants.GetSeedCount(tournament.Category);
+            int drawSize = DrawConstants.GetDrawSize(tournament.Category);
+            int byeCount = DrawConstants.GetByeCount(tournament.Category);
+            int seedCount = DrawConstants.GetSeedCount(tournament.Category);
 
             if (entryList == null || entryList.Count == 0)
             {
                 throw new InvalidOperationException("Entry list is empty.");
             }
 
-            var draw = new Draw
+            Draw draw = new Draw
             {
                 TournamentId = tournament.Id,
-                UserId = userId
+                UserId = userId,
+                DrawSize = drawSize,
+                ByeCount = byeCount,
+                SeedCount = seedCount
             };
 
             _context.Draws.Add(draw);
             _context.SaveChanges();
 
- 
-            var playerNames = entryList.Select(e => e.PlayerName).ToList();
-            var allPlayers = _context.Players
+            List<string> playerNames = entryList.Select(e => e.PlayerName).ToList();
+            Dictionary<string, Player> allPlayers = _context.Players
                 .Where(p => playerNames.Contains(p.Name))
                 .ToDictionary(p => p.Name, p => p);
 
-            var matches = GenerateDrawMatches(draw.Id, entryList, drawSize, byeCount, seedCount, allPlayers);
+            List<DrawMatch> matches = GenerateDrawMatches(draw.Id, entryList, drawSize, byeCount, seedCount, allPlayers);
 
-            foreach (var match in matches)
+            foreach (DrawMatch match in matches)
             {
                 _context.DrawMatches.Add(match);
             }
@@ -59,7 +61,7 @@ namespace TennisSim.Services
 
             _context.SaveChanges();
 
-            var completeDrawWithMatches = _context.Draws
+            Draw? completeDrawWithMatches = _context.Draws
                 .Include(d => d.DrawMatches)
                 .FirstOrDefault(d => d.Id == draw.Id);
 
@@ -68,10 +70,10 @@ namespace TennisSim.Services
 
         public void ProcessByeMatches(List<DrawMatch> matches)
         {
-            var byeMatches = matches.Where(m => m.IsBye).ToList();
-            foreach (var byeMatch in byeMatches.Where(m => m.Player1Id.HasValue))
+            List<DrawMatch> byeMatches = matches.Where(m => m.IsBye).ToList();
+            foreach (DrawMatch byeMatch in byeMatches.Where(m => m.Player1Id.HasValue))
             {
-                var nextMatch = GetNextMatch(byeMatch, matches);
+                DrawMatch nextMatch = GetNextMatch(byeMatch, matches);
                 if (nextMatch != null)
                 {
                     if (byeMatch.MatchNumber % 2 != 0)
@@ -90,8 +92,8 @@ namespace TennisSim.Services
 
         public DrawMatch GetNextMatch(DrawMatch currentMatch, List<DrawMatch> allMatches)
         {
-            var nextRoundMatchNumber = (currentMatch.MatchNumber + 1) / 2;
-            var nextMatch = allMatches.FirstOrDefault(m =>
+            int nextRoundMatchNumber = (currentMatch.MatchNumber + 1) / 2;
+            DrawMatch? nextMatch = allMatches.FirstOrDefault(m =>
                 m.Round == currentMatch.Round + 1 &&
                 m.MatchNumber == nextRoundMatchNumber);
 
@@ -106,16 +108,16 @@ namespace TennisSim.Services
         public List<DrawMatch> GenerateDrawMatches(int drawId, List<EntryList> entryList, int drawSize, int byeCount,
             int seedCount, Dictionary<string, Player> preloadedPlayers)
         {
-            var matches = new List<DrawMatch>();
-            var roundCount = (int)Math.Log2(drawSize);
-            var firstRoundMatchCount = drawSize / 2;
+            List<DrawMatch> matches = new List<DrawMatch>();
+            int roundCount = (int)Math.Log2(drawSize);
+            int firstRoundMatchCount = drawSize / 2;
 
             for (int round = 1; round <= roundCount; round++)
             {
-                var matchesInRound = drawSize / (int)Math.Pow(2, round);
+                int matchesInRound = drawSize / (int)Math.Pow(2, round);
                 for (int i = 1; i <= matchesInRound; i++)
                 {
-                    var drawMatch = new DrawMatch
+                    DrawMatch drawMatch = new DrawMatch
                     {
                         DrawId = drawId,
                         Round = round,
@@ -125,20 +127,20 @@ namespace TennisSim.Services
                 }
             }
 
-            var firstRoundMatches = matches.Where(m => m.Round == 1).ToList();
+            List<DrawMatch> firstRoundMatches = matches.Where(m => m.Round == 1).ToList();
 
-            var seedsCount = Math.Min(seedCount, entryList.Count);
+            int seedsCount = Math.Min(seedCount, entryList.Count);
 
-            var seeds = entryList.Take(seedsCount).ToList();
+            List<EntryList> seeds = entryList.Take(seedsCount).ToList();
             for (int i = 0; i < seeds.Count; i++)
             {
-                var position = DrawConstants.GetSeedPosition(i + 1, firstRoundMatchCount);
+                int position = DrawConstants.GetSeedPosition(i + 1, firstRoundMatchCount);
 
                 if (position >= 0 && position < firstRoundMatches.Count)
                 {
-                    var match = firstRoundMatches[position];
+                    DrawMatch match = firstRoundMatches[position];
 
-                    if (preloadedPlayers.TryGetValue(seeds[i].PlayerName, out var player))
+                    if (preloadedPlayers.TryGetValue(seeds[i].PlayerName, out Player? player))
                     {
                         match.Player1Id = player.Id;
                         match.Player1SeedNumber = i + 1;
@@ -156,12 +158,12 @@ namespace TennisSim.Services
                 }
             }
 
-            var remainingEntries = entryList.Skip(seedsCount).ToList();
-            var remainingPlayers = new List<Player>();
+            List<EntryList> remainingEntries = entryList.Skip(seedsCount).ToList();
+            List<Player> remainingPlayers = new List<Player>();
 
-            foreach (var entry in remainingEntries)
+            foreach (EntryList entry in remainingEntries)
             {
-                if (preloadedPlayers.TryGetValue(entry.PlayerName, out var player))
+                if (preloadedPlayers.TryGetValue(entry.PlayerName, out Player? player))
                 {
                     remainingPlayers.Add(player);
                 }
@@ -169,20 +171,20 @@ namespace TennisSim.Services
 
             remainingPlayers = remainingPlayers.OrderBy(x => Guid.NewGuid()).ToList();
 
-            foreach (var match in firstRoundMatches.Where(m => m.Player1Id == null))
+            foreach (DrawMatch match in firstRoundMatches.Where(m => m.Player1Id == null))
             {
                 if (remainingPlayers.Count == 0) break;
 
-                var player = remainingPlayers[0];
+                Player player = remainingPlayers[0];
                 match.Player1Id = player.Id;
                 remainingPlayers.RemoveAt(0);
             }
 
-            foreach (var match in firstRoundMatches.Where(m => !m.IsBye && m.Player2Id == null))
+            foreach (DrawMatch match in firstRoundMatches.Where(m => !m.IsBye && m.Player2Id == null))
             {
                 if (remainingPlayers.Count == 0) break;
 
-                var player = remainingPlayers[0];
+                Player player = remainingPlayers[0];
                 match.Player2Id = player.Id;
                 remainingPlayers.RemoveAt(0);
             }
@@ -192,10 +194,10 @@ namespace TennisSim.Services
 
         public void UpdateUserEntryListsViewStatus(int tournamentId)
         {
-            var userEntryLists = _context.UserEntryLists
+            IQueryable<UserEntryList> userEntryLists = _context.UserEntryLists
                 .Where(uel => uel.TournamentId == tournamentId && !uel.HasViewedDraw);
 
-            foreach (var userEntry in userEntryLists)
+            foreach (UserEntryList userEntry in userEntryLists)
             {
                 userEntry.HasViewedDraw = true;
             }

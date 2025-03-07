@@ -19,7 +19,7 @@ namespace TennisSim.Services
         {
             try
             {
-                var scheduleMatch = await _context.ScheduleMatches
+                ScheduleMatch? scheduleMatch = await _context.ScheduleMatches
                     .Include(sm => sm.DrawMatch)
                         .ThenInclude(dm => dm.Player1)
                             .ThenInclude(p => p.Attributes)
@@ -36,7 +36,7 @@ namespace TennisSim.Services
                 if (scheduleMatch?.DrawMatch == null)
                     throw new InvalidOperationException($"ScheduleMatch with ID {scheduleMatchId} not found or has no DrawMatch.");
 
-                var drawMatch = scheduleMatch.DrawMatch;
+                DrawMatch drawMatch = scheduleMatch.DrawMatch;
 
                 if (drawMatch.Player1 != null && drawMatch.Player1.Attributes == null)
                 {
@@ -55,7 +55,7 @@ namespace TennisSim.Services
                 if (drawMatch.Player1?.Attributes == null || drawMatch.Player2?.Attributes == null)
                     throw new InvalidOperationException("Player attributes are missing.");
 
-                var match = drawMatch.Match ?? CreateNewMatch(scheduleMatch, drawMatch);
+                Match match = drawMatch.Match ?? CreateNewMatch(scheduleMatch, drawMatch);
 
                 return new MatchViewModel
                 {
@@ -75,27 +75,27 @@ namespace TennisSim.Services
         {
             try
             {
-                var matchVM = await GetMatchWithPlayersAndAttributes(id);
+                MatchViewModel matchVM = await GetMatchWithPlayersAndAttributes(id);
                 if (matchVM?.Player1Attributes == null || matchVM?.Player2Attributes == null)
                 {
                     throw new InvalidOperationException("Player attributes are missing for simulation.");
                 }
 
-                var simulation = new MatchSimulation(_random);
-                var result = simulation.SimulateMatch(matchVM.Player1Attributes, matchVM.Player2Attributes);
+                MatchSimulation simulation = new MatchSimulation(_random);
+                MatchSimulation.MatchResult result = simulation.SimulateMatch(matchVM.Player1Attributes, matchVM.Player2Attributes);
 
-                var scheduleMatch = await GetScheduleMatchWithDetails(id);
+                ScheduleMatch scheduleMatch = await GetScheduleMatchWithDetails(id);
                 if (scheduleMatch?.DrawMatch == null)
                 {
                     throw new ArgumentException("Schedule match or draw match not found");
                 }
 
-                var winner = result.WinnerIsPlayer1 ? matchVM.Match.Player1 : matchVM.Match.Player2;
-                var setDetails = ConvertToSetDetails(result.Sets);
-                var setsTuples = result.Sets.Select(s => (s.P1Score, s.P2Score)).ToList();
-                var detailedScore = GenerateDetailedScore(result.Sets);
+                Player winner = result.WinnerIsPlayer1 ? matchVM.Match.Player1 : matchVM.Match.Player2;
+                List<SetDetailResult> setDetails = ConvertToSetDetails(result.Sets);
+                List<(int P1Score, int P2Score)> setsTuples = result.Sets.Select(s => (s.P1Score, s.P2Score)).ToList();
+                string detailedScore = GenerateDetailedScore(result.Sets);
 
-                await using var transaction = await _context.Database.BeginTransactionAsync();
+                await using Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction transaction = await _context.Database.BeginTransactionAsync();
                 try
                 {
                     await UpdateMatchResult(id, setsTuples, winner, scheduleMatch, detailedScore);
@@ -123,7 +123,7 @@ namespace TennisSim.Services
 
         private async Task<ScheduleMatch> GetScheduleMatchWithDetails(int id)
         {
-            var scheduleMatch = await _context.ScheduleMatches
+            ScheduleMatch? scheduleMatch = await _context.ScheduleMatches
                 .Include(sm => sm.DrawMatch)
                     .ThenInclude(dm => dm.Draw)
                         .ThenInclude(d => d.DrawMatches)
@@ -178,9 +178,9 @@ namespace TennisSim.Services
         {
             return string.Join(", ", sets.Select(set =>
             {
-                var gameScores = string.Join(" | ", set.Games.Select(game =>
+                string gameScores = string.Join(" | ", set.Games.Select(game =>
                 {
-                    var pointScores = string.Join(" ", game.Points.Select(point =>
+                    string pointScores = string.Join(" ", game.Points.Select(point =>
                         $"{point.P1ScoreDisplay}-{point.P2ScoreDisplay}"));
                     return $"[{pointScores}]";
                 }));
@@ -191,13 +191,13 @@ namespace TennisSim.Services
         private async Task UpdateMatchResult(int scheduleMatchId, List<(int p1Score, int p2Score)> sets,
             Player winner, ScheduleMatch scheduleMatch, string detailedScore)
         {
-            var drawMatch = scheduleMatch.DrawMatch;
+            DrawMatch drawMatch = scheduleMatch.DrawMatch;
             if (drawMatch == null) return;
 
             drawMatch.WinnerId = winner.Id;
             drawMatch.Winner = winner;
 
-            var match = drawMatch.Match ?? new Match();
+            Match match = drawMatch.Match ?? new Match();
             await UpdateMatchDetails(match, drawMatch, scheduleMatch, winner, detailedScore);
 
             if (drawMatch.Match == null)
@@ -215,7 +215,7 @@ namespace TennisSim.Services
         {
             if (drawMatch.Draw?.TournamentId > 0)
             {
-                var tournament = await _context.Tournaments
+                Tournament? tournament = await _context.Tournaments
                     .FirstOrDefaultAsync(t => t.Id == drawMatch.Draw.TournamentId);
                 if (tournament != null)
                 {
@@ -237,7 +237,7 @@ namespace TennisSim.Services
         {
             if (currentMatch.Draw == null) return;
 
-            var allMatches = await _context.DrawMatches
+            List<DrawMatch> allMatches = await _context.DrawMatches
                 .Include(m => m.Player1)
                 .Include(m => m.Player2)
                 .Include(m => m.Winner)
@@ -247,10 +247,10 @@ namespace TennisSim.Services
                 .ToListAsync();
 
             currentMatch.WinnerId = winnerId;
-            var winner = await _context.Players.FindAsync(winnerId);
+            Player? winner = await _context.Players.FindAsync(winnerId);
             currentMatch.Winner = winner;
 
-            var nextMatch = GetNextMatch(currentMatch, allMatches);
+            DrawMatch nextMatch = GetNextMatch(currentMatch, allMatches);
             if (nextMatch != null)
             {
                 UpdateNextMatchPlayer(currentMatch, nextMatch);
@@ -267,10 +267,10 @@ namespace TennisSim.Services
 
         private DrawMatch GetNextMatch(DrawMatch currentMatch, List<DrawMatch> allMatches)
         {
-             return allMatches
-        .Where(m => m.Round == currentMatch.Round + 1)
-        .OrderBy(m => m.MatchNumber)
-        .FirstOrDefault(m => m.MatchNumber == (currentMatch.MatchNumber + 1) / 2);
+            return allMatches
+               .Where(m => m.Round == currentMatch.Round + 1)
+               .OrderBy(m => m.MatchNumber)
+               .FirstOrDefault(m => m.MatchNumber == (currentMatch.MatchNumber + 1) / 2);
         }
 
         private void UpdateNextMatchPlayer(DrawMatch currentMatch, DrawMatch nextMatch)
