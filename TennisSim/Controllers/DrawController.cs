@@ -1,5 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using TennisSim.Data;
 using TennisSim.Models;
 using TennisSim.Services;
@@ -22,17 +25,23 @@ namespace TennisSim.Controllers
             if (!IsUserAuthenticated(out string username))
                 return RedirectToAction("EnterUsername", "GameStart");
 
-            UserName? user = _context.UserNames.FirstOrDefault(u => u.Username == username);
-            if (user == null)
+            var userWithDraws = _context.UserNames
+                .Where(u => u.Username == username)
+                .Select(u => new
+                {
+                    User = u,
+                    Draws = _context.Draws
+                        .Include(d => d.Tournament)
+                        .Where(d => d.Tournament != null && d.UserId == u.Id)
+                        .OrderByDescending(d => d.Tournament.StartDate)
+                        .ToList()
+                })
+                .FirstOrDefault();
+
+            if (userWithDraws == null)
                 return RedirectToAction("EnterUsername", "GameStart");
 
-            List<Draw> draws = _context.Draws
-                .Include(d => d.Tournament)
-                .Where(d => d.Tournament != null && d.UserId == user.Id)
-                .OrderByDescending(d => d.Tournament.StartDate)
-                .ToList();
-
-            return View(draws);
+            return View(userWithDraws.Draws);
         }
 
         public IActionResult Draw(int id)
@@ -40,31 +49,37 @@ namespace TennisSim.Controllers
             if (!IsUserAuthenticated(out string username))
                 return RedirectToAction("EnterUsername", "GameStart");
 
-            UserName? user = _context.UserNames.FirstOrDefault(u => u.Username == username);
-            if (user == null)
+            var result = _context.UserNames
+                .Where(u => u.Username == username)
+                .Select(u => new
+                {
+                    User = u,
+                    Draw = _context.Draws
+                        .Include(d => d.Tournament)
+                        .Include(d => d.DrawMatches.OrderBy(m => m.Round).ThenBy(m => m.MatchNumber))
+                            .ThenInclude(m => m.Player1)
+                        .Include(d => d.DrawMatches.OrderBy(m => m.Round).ThenBy(m => m.MatchNumber))
+                            .ThenInclude(m => m.Player2)
+                        .Include(d => d.DrawMatches.OrderBy(m => m.Round).ThenBy(m => m.MatchNumber))
+                            .ThenInclude(m => m.Winner)
+                        .FirstOrDefault(d => d.Id == id && d.UserId == u.Id)
+                })
+                .FirstOrDefault();
+
+            if (result == null || result.User == null)
                 return NotFound("User not found");
 
-            Draw? draw = _context.Draws
-                .Include(d => d.Tournament)
-                .Include(d => d.DrawMatches.OrderBy(m => m.Round).ThenBy(m => m.MatchNumber))
-                    .ThenInclude(m => m.Player1)
-                .Include(d => d.DrawMatches.OrderBy(m => m.Round).ThenBy(m => m.MatchNumber))
-                    .ThenInclude(m => m.Player2)
-                .Include(d => d.DrawMatches.OrderBy(m => m.Round).ThenBy(m => m.MatchNumber))
-                    .ThenInclude(m => m.Winner)
-                .FirstOrDefault(d => d.Id == id && d.UserId == user.Id);
-
-            if (draw == null)
+            if (result.Draw == null)
                 return NotFound("Draw not found for this user");
 
-            if (draw.Tournament != null && user.CurrentDate < draw.Tournament.StartDate.AddDays(-2))
+            if (result.Draw.Tournament != null && result.User.CurrentDate < result.Draw.Tournament.StartDate.AddDays(-2))
             {
-                ViewData["TournamentName"] = draw.Tournament.Name;
+                ViewData["TournamentName"] = result.Draw.Tournament.Name;
                 ViewData["DrawMessage"] = "The draw will be available closer to the tournament date.";
                 return View();
             }
 
-            return View(draw);
+            return View(result.Draw);
         }
 
         public IActionResult GenerateDraw(int tournamentId)
@@ -72,55 +87,56 @@ namespace TennisSim.Controllers
             if (!IsUserAuthenticated(out string username))
                 return RedirectToAction("EnterUsername", "GameStart");
 
-            UserName? user = _context.UserNames.FirstOrDefault(u => u.Username == username);
-            if (user == null)
+            var data = _context.UserNames
+                .Where(u => u.Username == username)
+                .Select(u => new
+                {
+                    User = u,
+                    Tournament = _context.Tournaments
+                        .Include(t => t.UserEntryLists)
+                            .ThenInclude(uel => uel.EntryList)
+                        .FirstOrDefault(t => t.Id == tournamentId),
+                    ExistingDraw = _context.Draws
+                        .Include(d => d.DrawMatches)
+                            .ThenInclude(m => m.Player1)
+                        .Include(d => d.DrawMatches)
+                            .ThenInclude(m => m.Player2)
+                        .Include(d => d.DrawMatches)
+                            .ThenInclude(m => m.Winner)
+                        .FirstOrDefault(d => d.TournamentId == tournamentId && d.UserId == u.Id)
+                })
+                .FirstOrDefault();
+
+            if (data == null || data.User == null)
                 return NotFound("User not found");
 
-            Tournament? tournament = _context.Tournaments
-                .Include(t => t.UserEntryLists)
-                    .ThenInclude(uel => uel.EntryList)
-                .FirstOrDefault(t => t.Id == tournamentId);
-
-            if (tournament == null)
+            if (data.Tournament == null)
                 return NotFound("Tournament not found");
 
-            if (user.CurrentDate < tournament.StartDate.AddDays(-2))
+            if (data.User.CurrentDate < data.Tournament.StartDate.AddDays(-2))
             {
-                ViewData["TournamentName"] = tournament.Name;
+                ViewData["TournamentName"] = data.Tournament.Name;
                 ViewData["DrawMessage"] = "The draw will be available closer to the tournament date.";
                 return View("Draw");
             }
 
-            Draw? existingDraw = _context.Draws
-                .Include(d => d.DrawMatches)
-                    .ThenInclude(m => m.Player1)
-                .Include(d => d.DrawMatches)
-                    .ThenInclude(m => m.Player2)
-                .Include(d => d.DrawMatches)
-                    .ThenInclude(m => m.Winner)
-                .FirstOrDefault(d => d.TournamentId == tournamentId && d.UserId == user.Id);
-
             _drawService.UpdateUserEntryListsViewStatus(tournamentId);
 
-            if (existingDraw != null)
-                return View("Draw", existingDraw);
+            if (data.ExistingDraw != null)
+                return View("Draw", data.ExistingDraw);
 
             try
             {
-                UserEntryList? userEntryList = tournament.UserEntryLists?
-                    .FirstOrDefault(uel => uel.UserNameId == user.Id);
+                UserEntryList userEntryList = data.Tournament.UserEntryLists?
+                    .FirstOrDefault(uel => uel.UserNameId == data.User.Id);
 
-                List<EntryList> entryList;
-
-                if (userEntryList != null && userEntryList.EntryList != null && userEntryList.EntryList.Any())
-                {
-                    entryList = userEntryList.EntryList.OrderBy(e => e.Rank).ToList();
-                }
-                else
+                if (userEntryList == null || userEntryList.EntryList == null || !userEntryList.EntryList.Any())
                 {
                     TempData["ErrorMessage"] = "You must view the entry list before generating the draw. This ensures that the correct players are included.";
                     return RedirectToAction("Details", "Tournament", new { id = tournamentId });
                 }
+
+                List<EntryList> entryList = userEntryList.EntryList.OrderBy(e => e.Rank).ToList();
 
                 if (entryList.Count == 0)
                 {
@@ -129,7 +145,8 @@ namespace TennisSim.Controllers
                 }
 
                 List<string> playerNames = entryList.Select(e => e.PlayerName).ToList();
-                if (playerNames.Count != playerNames.Distinct().Count())
+                int distinctCount = new HashSet<string>(playerNames).Count;
+                if (playerNames.Count != distinctCount)
                 {
                     TempData["ErrorMessage"] = "Entry list contains duplicate players. Please fix the entry list first.";
                     return RedirectToAction("Details", "Tournament", new { id = tournamentId });
@@ -137,9 +154,9 @@ namespace TennisSim.Controllers
 
                 Dictionary<string, Player> allPlayers = _context.Players
                     .Where(p => playerNames.Contains(p.Name))
-                    .ToDictionary(p => p.Name, p => p);
+                    .ToDictionary(p => p.Name);
 
-                List<string> missingPlayers = playerNames.Except(allPlayers.Keys).ToList();
+                List<string> missingPlayers = playerNames.Where(p => !allPlayers.ContainsKey(p)).ToList();
                 if (missingPlayers.Any())
                 {
                     string missingPlayersMessage = string.Join(", ", missingPlayers);
@@ -147,7 +164,7 @@ namespace TennisSim.Controllers
                     return RedirectToAction("Details", "Tournament", new { id = tournamentId });
                 }
 
-                Draw draw = _drawService.CreateNewDraw(tournament, entryList, user.Id);
+                Draw draw = _drawService.CreateNewDraw(data.Tournament, entryList, data.User.Id);
                 return RedirectToAction("Draw", new { id = draw.Id });
             }
             catch (Exception ex)
@@ -159,11 +176,6 @@ namespace TennisSim.Controllers
 
         private bool IsUserAuthenticated(out string username)
         {
-            username = string.Empty;
-
-            if (!HttpContext.Session.Keys.Contains("Username"))
-                return false;
-
             username = HttpContext.Session.GetString("Username") ?? string.Empty;
             return !string.IsNullOrEmpty(username);
         }
