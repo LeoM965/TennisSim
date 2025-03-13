@@ -20,10 +20,7 @@ namespace TennisSim.Controllers
 
         public async Task<IActionResult> MatchDetails(int drawMatchId)
         {
-            if (!HttpContext.Session.Keys.Contains("Username"))
-                return RedirectToAction("EnterUsername", "GameStart");
-
-            string? username = HttpContext.Session.GetString("Username");
+            var username = HttpContext.Session.GetString("Username");
             if (string.IsNullOrEmpty(username))
                 return RedirectToAction("EnterUsername", "GameStart");
 
@@ -42,28 +39,28 @@ namespace TennisSim.Controllers
                 .FirstOrDefaultAsync(d => d.Id == drawMatchId);
 
             if (drawMatch == null)
-            {
                 return NotFound();
-            }
 
             var player1Id = drawMatch.Player1Id;
             var player2Id = drawMatch.Player2Id;
 
             var headToHeadMatches = await _context.Matches
-                .Where(m =>
+                .Where(m => 
                     ((m.Player1Id == player1Id && m.Player2Id == player2Id) ||
                     (m.Player1Id == player2Id && m.Player2Id == player1Id)) &&
-                    m.Draw.UserId == user.Id) 
+                    m.Draw.UserId == user.Id)
                 .OrderByDescending(m => m.Date)
                 .Include(m => m.Player1)
                 .Include(m => m.Player2)
                 .Include(m => m.Winner)
                 .Include(m => m.Draw)
                     .ThenInclude(d => d.Tournament)
-                .AsSplitQuery()  
+                .AsSplitQuery()
                 .ToListAsync();
 
-            var viewModel = new MatchDetailsViewModel
+            ViewData["CurrentDate"] = user.CurrentDate.ToString("d MMMM yyyy");
+
+            return View(new MatchDetailsViewModel
             {
                 HeadToHeadMatches = headToHeadMatches,
                 Player1Id = drawMatch.Player1.Id,
@@ -78,22 +75,14 @@ namespace TennisSim.Controllers
                     .GroupBy(m => m.Round)
                     .ToDictionary(g => g.Key, g => g.Count()),
                 TournamentName = drawMatch.Draw.Tournament.Name,
-            };
-
-            ViewData["CurrentDate"] = user.CurrentDate.ToString("d MMMM yyyy");
-
-            return View(viewModel);
+            });
         }
 
         public async Task<IActionResult> SimulateMatch(int matchId)
         {
-            Console.WriteLine($"Requested matchId: {matchId}");
             var match = await _matchService.GetMatchWithPlayersAndAttributes(matchId);
             if (match == null)
-            {
-                Console.WriteLine($"Match not found for ID: {matchId}");
                 return NotFound();
-            }
 
             return View(match);
         }
@@ -101,39 +90,19 @@ namespace TennisSim.Controllers
         public async Task<IActionResult> RunSimulation([Required] int matchId)
         {
             if (matchId <= 0)
-            {
-                return BadRequest(new
-                {
-                    error = "Invalid match ID",
-                    details = "Match ID must be a positive number"
-                });
-            }
+                return BadRequest(new { error = "Invalid match ID", details = "Match ID must be a positive number" });
 
             try
             {
                 var result = await _matchService.SimulateMatch(matchId);
 
                 if (result == null)
-                { 
-                    return StatusCode(500, new
-                    {
-                        error = "Match simulation failed",
-                        details = "Unable to simulate match"
-                    });
-                }
+                    return StatusCode(500, new { error = "Match simulation failed", details = "Unable to simulate match" });
 
                 return Ok(new
                 {
-                    winner = new
-                    {
-                        id = result.Winner.Id,
-                        name = result.Winner.Name
-                    },
-                    sets = result.Sets.Select(s => new
-                    {
-                        p1Score = s.p1Score,
-                        p2Score = s.p2Score
-                    }),
+                    winner = new { id = result.Winner.Id, name = result.Winner.Name },
+                    sets = result.Sets.Select(s => new { p1Score = s.p1Score, p2Score = s.p2Score }),
                     setDetails = result.SetDetails.Select(sd => new
                     {
                         setNumber = sd.SetNumber,
@@ -155,27 +124,17 @@ namespace TennisSim.Controllers
             }
             catch (ArgumentException ex)
             {
-                
-                return BadRequest(new
-                {
-                    error = "Invalid match data",
-                    details = ex.Message
-                });
+                return BadRequest(new { error = "Invalid match data", details = ex.Message });
             }
             catch (InvalidOperationException ex)
             {
-                return StatusCode(500, new
-                {
-                    error = "Match simulation failed",
-                    details = ex.Message
-                });
+                return StatusCode(500, new { error = "Match simulation failed", details = ex.Message });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return StatusCode(500, new
-                {
-                    error = "Internal server error",
-                    details = "An unexpected error occurred during match simulation"
+                return StatusCode(500, new { 
+                    error = "Internal server error", 
+                    details = "An unexpected error occurred during match simulation" 
                 });
             }
         }
